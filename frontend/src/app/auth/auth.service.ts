@@ -37,7 +37,6 @@ export class AuthService {
     if (!tokens?.access_token) throw new Error('Authentication failed');
 
     localStorage.setItem(ACCESS_TOKEN_KEY, tokens.access_token);
-    if (tokens.refresh_token) localStorage.setItem(REFRESH_TOKEN_KEY, tokens.refresh_token);
   }
 
   async logout(): Promise<void> {

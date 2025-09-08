@@ -6,14 +6,8 @@ import { AuthService } from '../auth/auth.service';
   selector: 'app-home',
   standalone: true,
   imports: [CommonModule],
-  template: `
-    <div style="max-width:720px;margin:64px auto;padding:24px">
-      <h1>Bienvenue</h1>
-      <p>Vous êtes connecté.</p>
-      <button (click)="onLogout()">Se déconnecter</button>
-    </div>
-  `,
-  styles: [`button{padding:8px 16px;border-radius:8px;border:none;background:#444;color:#fff}`]
+  templateUrl: './home.component.html',
+  styleUrl: './home.component.css'
 })
 export class HomeComponent {
   private readonly auth = inject(AuthService);
