@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../environments/environment';
 
 type MeResponse = {
   data: {
@@ -23,7 +24,7 @@ type MeResponse = {
 export class SettingsComponent implements OnInit {
   private readonly http = inject(HttpClient);
   private readonly fb = inject(FormBuilder);
-  private readonly DIRECTUS_URL: string = (globalThis as any).DIRECTUS_URL || 'http://localhost:8055';
+  private readonly DIRECTUS_URL: string = environment.directusUrl;
 
   readonly loading = signal(false);
   readonly saving = signal(false);

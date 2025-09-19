@@ -26,7 +26,8 @@ type RegisterData = {
   last_name: string;
 };
 
-const DIRECTUS_URL = (globalThis as any).DIRECTUS_URL || 'http://localhost:8055';
+import { environment } from '../../../environments/environment';
+const DIRECTUS_URL = environment.directusUrl;
 const ACCESS_TOKEN_KEY = 'directus_access_token';
 const REFRESH_TOKEN_KEY = 'directus_refresh_token';
 

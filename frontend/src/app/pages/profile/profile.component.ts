@@ -1,6 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../environments/environment';
 
 type MeResponse = {
   data: {
@@ -38,11 +39,11 @@ type ProjectViewModel = {
   standalone: true,
   imports: [CommonModule],
   templateUrl: './profile.component.html',
-  styleUrl: './profile.component.css'
+  styleUrls: ['./profile.component.css']
 })
 export class ProfileComponent implements OnInit {
   private readonly http = inject(HttpClient);
-  private readonly DIRECTUS_URL: string = (globalThis as any).DIRECTUS_URL || 'http://localhost:8055';
+  private readonly DIRECTUS_URL: string = environment.directusUrl;
 
   firstName?: string;
   lastName?: string;
