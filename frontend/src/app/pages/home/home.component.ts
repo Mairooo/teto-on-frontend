@@ -2,7 +2,7 @@ import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ProjectsService } from '../../shared/services/projet.service';
-import { Projects } from '../models/project.model';
+import { Projects } from '../../shared/interfaces/project.interface';
 
 @Component({
   selector: 'app-home',
@@ -59,10 +59,9 @@ export class HomeComponent implements OnInit {
   }
 
   onLogout() {
-    localStorage.removeItem('token');
-    localStorage.removeItem('userId');
+    localStorage.removeItem('directus_access_token');
     this.isLoggedIn = false;
-    this.router.navigate(['/auth']);
+    this.router.navigate(['/login']);
   }
 
   goToCreateProjects() {
