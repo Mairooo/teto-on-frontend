@@ -35,8 +35,18 @@
 
             <div class="mt-4">
               <label class="block text-sm text-gray-700 mb-1">Banque vocale</label>
-              <select class="w-full h-10 px-3 rounded-md border border-gray-300 bg-white">
-                <option>Choisir une voix</option>
+              <select class="w-full h-10 px-3 rounded-md border border-gray-300 bg-white"
+                      (change)="onSelectVoicebank(voicebanks()[$any($event.target).selectedIndex])">
+                <option *ngFor="let vb of voicebanks()" [value]="vb.id">{{ vb.name }}</option>
+              </select>
+            </div>
+
+            <div class="mt-4">
+              <label class="block text-sm text-gray-700 mb-2">Phonème</label>
+              <select class="w-full h-10 px-3 rounded-md border border-gray-300 bg-white"
+                      [value]="selectedPhoneme()"
+                      (change)="onSelectPhoneme($any($event.target).value)">
+                <option *ngFor="let ph of phonemeList" [value]="ph">{{ ph }}</option>
               </select>
             </div>
 
@@ -79,10 +89,19 @@
 
                 <div class="col-span-full border-t border-gray-200"></div>
 
-                <ng-container *ngFor="let row of ['B5','A#5','A5','G#5','G5','F#5','F5','E5','D#5','D5','C#5','C5','B4','A#4','A4','G#4','G4']">
+                <ng-container *ngFor="let row of pitchList; let rowIndex = index">
                   <div class="border-b border-gray-100 text-xs text-gray-700 bg-gray-50/60 p-2">{{ row }}</div>
-                  <ng-container *ngFor="let m of [].constructor(measures())">
-                    <div class="border-l border-gray-100 border-b border-gray-100 bg-white" style="background-image: linear-gradient(90deg, rgba(0,0,0,0.025) 1px, transparent 1px); background-size: 16px 16px;"></div>
+                  <ng-container *ngFor="let m of [].constructor(measures()); let measureIndex = index">
+                    <div 
+                      class="border-l border-gray-100 border-b border-gray-100 bg-white relative cursor-pointer hover:bg-blue-50 transition-colors"
+                      style="background-image: linear-gradient(90deg, rgba(0,0,0,0.025) 1px, transparent 1px); background-size: 25% 100%;"
+                      (click)="onCellClick(row, measureIndex, 0)">
+                      <ng-container *ngIf="getNoteAt(row, measureIndex) as note">
+                        <div class="absolute inset-0 bg-blue-500 opacity-75 rounded flex items-center justify-center">
+                          <span class="text-white text-xs font-semibold">{{ note.phoneme }}</span>
+                        </div>
+                      </ng-container>
+                    </div>
                   </ng-container>
                 </ng-container>
               </div>
