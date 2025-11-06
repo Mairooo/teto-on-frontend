@@ -33,7 +33,7 @@ export default (router, { env, services, exceptions }) => {
       // Configuration de l'index
       const searchableAttributes = ['title', 'searchable_content', 'description', 'creator', 'voicebank_name'];
       const filterableAttributes = ['voicebank_id', 'creator_id', 'status', 'tempo', 'key_signature'];
-      const sortableAttributes = ['likes', 'plays', 'tempo', 'duration'];
+      const sortableAttributes = ['likes_count', 'plays', 'tempo', 'duration'];
 
       await Promise.all([
         index.updateSearchableAttributes(searchableAttributes),
@@ -109,7 +109,7 @@ export default (router, { env, services, exceptions }) => {
             voicebank_name,
             voicebank_id,
             plays: parseInt(project.plays) || 0,
-            likes: parseInt(project.likes) || 0,
+            likes_count: parseInt(project.likes_count) || 0,
             status: project.status,
             collection: 'projects',
             cover_image: project.cover_image || null

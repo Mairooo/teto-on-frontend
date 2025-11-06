@@ -11,7 +11,7 @@ export interface SearchResult {
   voicebank_name: string;
   voicebank_id: string | null;
   plays: number;
-  likes: number;
+  likes_count: number;
   status: string;
   collection: string;
   cover_image?: string | null;

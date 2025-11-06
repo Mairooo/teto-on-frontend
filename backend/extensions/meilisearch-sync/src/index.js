@@ -50,7 +50,7 @@ export default ({ action }, { env, services, logger }) => {
         voicebank_name: project.primary_voicebank?.name || '',
         voicebank_id: project.primary_voicebank?.id,
         plays: parseInt(project.plays) || 0,
-        likes: parseInt(project.likes) || 0,
+        likes_count: parseInt(project.likes_count) || 0,
         status: project.status,
         collection: 'projects',
         cover_image: project.cover_image || null
