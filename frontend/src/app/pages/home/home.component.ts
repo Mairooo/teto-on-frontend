@@ -54,15 +54,19 @@ export class HomeComponent implements OnInit {
 
         // Stats
         this.totalProjects = this.projets.length;
-        this.totalLikes = this.projets.reduce((acc, p) => acc + (p.likes ?? 0), 0);
+        this.totalLikes = this.projets.reduce((acc, p) => acc + (p.likes_count ?? 0), 0);
         this.totalPlays = this.projets.reduce((acc, p) => acc + (p.plays ?? 0), 0);
 
-        // Créateurs distincts
+        // Créateurs distincts ayant au moins 1 projet publié
         const creators = new Set<string>();
         this.projets.forEach(p => {
-          if (p.user_created && typeof p.user_created === 'object') {
-            const name = `${p.user_created.first_name ?? ''} ${p.user_created.last_name ?? ''}`.trim();
-            if (name) creators.add(name);
+          if (p.user_created) {
+            if (typeof p.user_created === 'object') {
+              const userId = (p.user_created as any).id;
+              if (userId) creators.add(userId);
+            } else if (typeof p.user_created === 'string') {
+              creators.add(p.user_created);
+            }
           }
         });
         this.totalCreators = creators.size;
