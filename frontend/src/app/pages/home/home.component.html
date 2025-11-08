@@ -155,8 +155,14 @@
 
           <div class="p-4">
             <div class="font-semibold text-gray-900 mb-1">{{ projet.title }}</div>
+            
+            <!-- Nom du créateur -->
+            <div class="text-sm text-gray-600 mb-3">
+              <span *ngIf="getCreatorName(projet) as creatorName">{{ creatorName }}</span>
+              <span *ngIf="!getCreatorName(projet)" class="text-gray-400">Anonyme</span>
+            </div>
 
-            <div class="flex items-center justify-between mt-3">
+            <div class="flex items-center justify-between">
               <!-- Like button -->
               <app-like-button 
                 [projectId]="projet.id" 

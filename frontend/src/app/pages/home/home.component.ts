@@ -107,4 +107,34 @@ export class HomeComponent implements OnInit {
   goToProfile() {
     this.router.navigate(['/profile']);
   }
+
+  /**
+   * Récupérer le nom du créateur d'un projet
+   */
+  getCreatorName(projet: Projects): string | null {
+    if (!projet.user_created) return null;
+    
+    // Si user_created est un objet avec first_name et/ou last_name
+    if (typeof projet.user_created === 'object') {
+      const user = projet.user_created as any;
+      const firstName = user.first_name || '';
+      const lastName = user.last_name || '';
+      const fullName = `${firstName} ${lastName}`.trim();
+      
+      // Si on a un nom complet, le retourner
+      if (fullName) return fullName;
+      
+      // Sinon, utiliser l'email s'il existe
+      if (user.email) {
+        return user.email.split('@')[0]; // Prendre la partie avant le @
+      }
+    }
+    
+    // Si c'est juste un ID string
+    if (typeof projet.user_created === 'string') {
+      return `Utilisateur ${projet.user_created.substring(0, 8)}`;
+    }
+    
+    return null;
+  }
 }
