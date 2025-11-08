@@ -1,6 +1,6 @@
 import { MeiliSearch } from 'meilisearch';
 
-export default ({ action }, { env, services, logger }) => {
+export default ({ filter, action }, { env, services, logger }) => {
   // Configuration du client Meilisearch
   const client = new MeiliSearch({
     host: env.MEILISEARCH_HOST || 'http://localhost:7700',
@@ -11,17 +11,19 @@ export default ({ action }, { env, services, logger }) => {
   const index = client.index(indexName);
 
   // Fonction utilitaire pour transformer un projet pour Meilisearch
-  async function transformProjectForSearch(projectId, services) {
+  async function transformProjectForSearch(projectId, context) {
     try {
       const { ItemsService } = services;
       const projectsService = new ItemsService('Projects', {
-        knex: services.knex,
-        schema: services.schema
+        knex: context.database || services.knex,
+        schema: context.schema || await context.getSchema() || services.schema,
+        accountability: context.accountability
       });
 
       const project = await projectsService.readOne(projectId, {
         fields: [
           '*',
+          'likes_count',
           'user_created.id',
           'user_created.first_name',
           'user_created.last_name',
@@ -33,7 +35,7 @@ export default ({ action }, { env, services, logger }) => {
         ]
       });
 
-      if (!project || project.status !== '1') { // '1' = published
+      if (!project || project.status !== '1') {
         return null; // Ne pas indexer les projets non publiés
       }
 
@@ -62,47 +64,58 @@ export default ({ action }, { env, services, logger }) => {
   }
 
   // Hook CREATE : Nouveau projet créé
-  action('Projects.items.create', async ({ key, payload }) => {
-    try {
-      if (payload.status === '1') { // '1' = published
-        const document = await transformProjectForSearch(key, services);
+  action('items.create', async ({ collection, item, key }, context) => {
+    if (collection === 'Projects') {
+      try {
+        const document = await transformProjectForSearch(key, context);
         if (document) {
           await index.addDocuments([document], { primaryKey: 'id' });
           logger.info(`Projet ${key} ajouté à l'index Meilisearch`);
         }
+      } catch (error) {
+        logger.error(`Erreur sync CREATE:`, error.message);
       }
-    } catch (error) {
-      logger.error(`Erreur sync CREATE projet ${key}:`, error.message);
     }
   });
 
   // Hook UPDATE : Projet modifié
-  action('Projects.items.update', async ({ keys, payload }) => {
-    try {
-      for (const key of keys) {
-        const document = await transformProjectForSearch(key, services);
-        if (document) {
-          // Projet publié : mettre à jour dans l'index
-          await index.updateDocuments([document], { primaryKey: 'id' });
-          logger.info(`Projet ${key} mis à jour dans Meilisearch`);
-        } else {
-          // Projet dépublié : supprimer de l'index
-          await index.deleteDocument(key);
-          logger.info(`Projet ${key} supprimé de l'index Meilisearch`);
+  action('items.update', async ({ collection, item, keys }, context) => {
+    if (collection === 'Projects') {
+      try {
+        for (const key of keys) {
+          const document = await transformProjectForSearch(key, context);
+          if (document) {
+            // Projet publié : ajouter ou mettre à jour dans l'index
+            // addDocuments fonctionne pour les nouveaux ET les existants
+            await index.addDocuments([document], { primaryKey: 'id' });
+            logger.info(`Projet ${key} ajouté/mis à jour dans Meilisearch`);
+          } else {
+            // Projet dépublié : supprimer de l'index
+            try {
+              await index.deleteDocument(key);
+              logger.info(`Projet ${key} supprimé de l'index Meilisearch`);
+            } catch (e) {
+              // Document n'existait peut-être pas, ce n'est pas grave
+              logger.info(`Projet ${key} n'était pas dans l'index`);
+            }
+          }
         }
+      } catch (error) {
+        logger.error(`Erreur sync UPDATE projets:`, error.message);
       }
-    } catch (error) {
-      logger.error(`Erreur sync UPDATE projets:`, error.message);
     }
   });
 
   // Hook DELETE : Projet supprimé
-  action('Projects.items.delete', async ({ keys }) => {
-    try {
-      await index.deleteDocuments(keys);
-      logger.info(`Projets ${keys.join(', ')} supprimés de Meilisearch`);
-    } catch (error) {
-      logger.error(`Erreur sync DELETE projets:`, error.message);
+  action('items.delete', async ({ collection, payload }) => {
+    if (collection === 'Projects') {
+      try {
+        const keys = Array.isArray(payload) ? payload : [payload];
+        await index.deleteDocuments(keys);
+        logger.info(`Projets ${keys.join(', ')} supprimés de Meilisearch`);
+      } catch (error) {
+        logger.error(`Erreur sync DELETE projets:`, error.message);
+      }
     }
   });
 
