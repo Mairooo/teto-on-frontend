@@ -97,7 +97,7 @@ export class HomeComponent implements OnInit {
   }
 
   goToProject(title: string) {
-    this.router.navigate(['/project-view', title]);
+    this.router.navigate(['/project', title]);
   }
 
   goToLogin() {

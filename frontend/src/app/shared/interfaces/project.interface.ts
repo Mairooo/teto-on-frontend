@@ -6,6 +6,12 @@ export interface Projects {
   likes_count?: number; // Nouveau compteur de likes
   plays?: number;
   cover_image?: string;
-  user_created?: { first_name?: string; last_name?: string } | string;
+  user_created?: { first_name?: string; last_name?: string; email?: string; id?: string } | string;
   status?: string | number;
+  date_created?: string;
+  date_updated?: string;
+  tempo?: number;
+  key_signature?: string;
+  duration?: number;
+  tags?: any[];
 }

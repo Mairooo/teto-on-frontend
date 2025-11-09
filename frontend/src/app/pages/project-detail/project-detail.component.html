@@ -1,0 +1,166 @@
+<div class="container mx-auto px-4 py-8">
+  @if (isLoading) {
+    <div class="flex justify-center items-center py-12">
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+      <span class="ml-3 text-gray-600">Chargement...</span>
+    </div>
+  }
+
+  @if (error) {
+    <div class="text-center py-12">
+      <div class="mx-auto h-24 w-24 bg-red-100 rounded-full flex items-center justify-center mb-4">
+        <svg class="w-12 h-12 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+      </div>
+      <h2 class="text-xl font-semibold text-gray-900 mb-2">{{ error }}</h2>
+      <button (click)="goBack()" class="mt-4 px-6 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors">
+        Retour à l'accueil
+      </button>
+    </div>
+  }
+
+  @if (project && !isLoading && !error) {
+    <!-- Bouton retour -->
+    <button
+      (click)="goBack()"
+      class="mb-6 inline-flex items-center text-gray-600 hover:text-gray-900 transition-colors"
+    >
+      <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+      </svg>
+      Retour à l'accueil
+    </button>
+
+    <div class="max-w-4xl mx-auto">
+      <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+        <!-- Cover Image -->
+        @if (getCoverImageUrl(); as coverUrl) {
+          <div class="h-64 bg-gray-100 overflow-hidden">
+            <img [src]="coverUrl" [alt]="project.title" class="w-full h-full object-cover" />
+          </div>
+        } @else {
+          <div class="h-64 bg-gray-100 flex items-center justify-center">
+            <svg class="w-24 h-24 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M18 3a1 1 0 00-1.196-.98l-10 2A1 1 0 006 5v9.114A4.369 4.369 0 005 14c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V7.82l8-1.6v5.894A4.369 4.369 0 0015 12c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V3z"/>
+            </svg>
+          </div>
+        }
+
+        <!-- En-tête avec informations -->
+        <div class="p-6 border-b">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center">
+              <div class="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center mr-4">
+                <svg class="w-6 h-6 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+                </svg>
+              </div>
+              <div>
+                <h3 class="font-semibold text-gray-900">{{ getCreatorName() }}</h3>
+                <p class="text-sm text-gray-600">{{ getRelativeTime(project.date_created || '') }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Titre -->
+          <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ project.title }}</h1>
+
+          <!-- Description -->
+          @if (project.description) {
+            <p class="text-gray-700 mt-4">{{ project.description }}</p>
+          }
+        </div>
+
+        <!-- Informations du projet -->
+        <div class="p-6 bg-gray-50 border-b">
+          <h3 class="text-lg font-semibold text-gray-900 mb-4">Informations</h3>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <!-- Voicebank -->
+            <div class="flex flex-col">
+              <span class="text-sm text-gray-500">Voicebank</span>
+              <span class="font-medium text-gray-900">{{ getVoicebankName() }}</span>
+            </div>
+
+            <!-- Durée -->
+            @if (project.duration) {
+              <div class="flex flex-col">
+                <span class="text-sm text-gray-500">Durée</span>
+                <span class="font-medium text-gray-900">{{ formatDuration(project.duration) }}</span>
+              </div>
+            }
+
+            <!-- Tempo -->
+            @if (project.tempo) {
+              <div class="flex flex-col">
+                <span class="text-sm text-gray-500">Tempo</span>
+                <span class="font-medium text-gray-900">{{ project.tempo }} BPM</span>
+              </div>
+            }
+
+            <!-- Tonalité -->
+            @if (project.key_signature) {
+              <div class="flex flex-col">
+                <span class="text-sm text-gray-500">Tonalité</span>
+                <span class="font-medium text-gray-900">{{ project.key_signature }}</span>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Actions et stats -->
+        <div class="p-6 border-t">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-6">
+              <!-- Likes -->
+              <div class="flex items-center space-x-2 text-gray-600">
+                <svg class="w-6 h-6 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"/>
+                </svg>
+                <span class="font-medium">{{ project.likes_count ?? project.likes ?? 0 }}</span>
+              </div>
+
+              <!-- Écoutes -->
+              <div class="flex items-center space-x-2 text-gray-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                </svg>
+                <span>{{ project.plays ?? 0 }} écoute(s)</span>
+              </div>
+            </div>
+
+            <!-- Partage -->
+            <button
+              (click)="shareUrl()"
+              class="flex items-center space-x-2 text-gray-600 hover:text-blue-600 p-2 rounded-lg hover:bg-blue-50 transition-colors"
+              title="Partager"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"/>
+              </svg>
+              <span>Partager</span>
+            </button>
+          </div>
+
+          <!-- Tags -->
+          @if (project.tags && project.tags.length > 0) {
+            <div class="mt-6">
+              <h4 class="text-sm font-medium text-gray-900 mb-2">Tags :</h4>
+              <div class="flex flex-wrap gap-2">
+                @for (tagRelation of project.tags; track tagRelation.Tags_id?.id) {
+                  @if (tagRelation.Tags_id) {
+                    <app-tag-chip
+                      [tag]="tagRelation.Tags_id"
+                      class="inline-block"
+                    ></app-tag-chip>
+                  }
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  }
+</div>
