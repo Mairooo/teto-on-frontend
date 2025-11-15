@@ -1,25 +1,19 @@
 {
-  "name": "voicebank-api",
+  "name": "audio-upload",
   "version": "1.0.0",
-  "description": "Directus endpoint for voicebank audio files",
+  "description": "Endpoint pour uploader les fichiers audio rendus",
   "type": "module",
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "directus:extension": {
     "type": "endpoint",
     "path": "dist/index.js",
     "source": "src/index.js",
     "host": "^11.0.0",
-    "id": "voicebank"
+    "id": "audio-upload"
   },
   "scripts": {
     "build": "directus-extension build"
   },
   "devDependencies": {
     "@directus/extensions-sdk": "^12.0.2"
-  },
-  "dependencies": {
-    "adm-zip": "^0.5.16"
   }
 }

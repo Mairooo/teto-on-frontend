@@ -114,8 +114,9 @@ export class SettingsComponent implements OnInit {
         description: this.form.value.description ?? null,
       };
       if (this.avatarFileId) body.avatar = this.avatarFileId;
-  await this.api.updateUser(this.userId, body).toPromise();
-      this.success.set('Modifications enregistrées.');
+      await this.api.updateUser(this.userId, body).toPromise();
+      // Redirection vers la page de profil après sauvegarde réussie
+      await this.router.navigate(['/profile']);
     } catch (e) {
       this.error.set('Impossible de sauvegarder les modifications.');
     } finally {

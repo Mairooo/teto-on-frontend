@@ -5,6 +5,8 @@ import { FormsModule } from '@angular/forms';
 import { VoicebankService, Voicebank } from '../../shared/services/voicebank.service';
 import { CompositionService, ProjectData } from '../../shared/services/composition.service';
 import { Note, PHONEME_MAP, PITCH_LIST } from '../../shared/models/composer.model';
+import { AudioRendererService } from '../../shared/services/audio-renderer.service';
+import { Api } from '../../shared/services/api.service';
 
 @Component({
   selector: 'app-composer',
@@ -40,9 +42,14 @@ export class ComposerComponent implements OnInit {
   private playTimer: any = null;
   private playingNotes = new Set<string>();
 
+  // Signal pour l'état du rendu audio
+  readonly rendering = signal(false);
+
   constructor(
     private voicebankService: VoicebankService,
-    private compositionService: CompositionService
+    private compositionService: CompositionService,
+    private audioRenderer: AudioRendererService,
+    private api: Api
   ) {}
 
   ngOnInit(): void {
@@ -215,7 +222,7 @@ export class ComposerComponent implements OnInit {
     this.showSaveDialog.set(false);
   }
 
-  saveProject(): void {
+  async saveProject(): Promise<void> {
     const title = this.saveTitle().trim();
     if (!title) {
       alert('Veuillez donner un titre au projet');
@@ -227,8 +234,58 @@ export class ComposerComponent implements OnInit {
       return;
     }
 
-    console.log('Saving project with voicebank ID:', this.selectedVoicebank()!.id);
-    console.log('Notes to save:', this.notes());
+    // Vérifier que l'utilisateur est authentifié
+    const token = localStorage.getItem('directus_access_token');
+    if (!token) {
+      alert('Vous devez être connecté pour sauvegarder un projet');
+      return;
+    }
+
+    // Générer l'audio si des notes existent
+    let audioFileId: string | undefined;
+    if (this.notes().length > 0) {
+      try {
+        this.rendering.set(true);
+        
+        const audioBlob = await this.audioRenderer.renderComposition(
+          this.notes(),
+          this.selectedVoicebank()!.name,
+          this.bpm(),
+          PHONEME_MAP
+        );
+        
+        if (audioBlob.size === 0) {
+          throw new Error('Le fichier audio généré est vide');
+        }
+        
+        // Créer un fichier à partir du Blob
+        const audioFile = new File([audioBlob], `${title}.wav`, { type: 'audio/wav' });
+        
+        // Uploader le fichier
+        const uploadResult = await this.api.uploadFile(audioFile).toPromise();
+        audioFileId = uploadResult?.data?.id;
+        
+        if (!audioFileId) {
+          throw new Error('L\'upload n\'a pas retourné d\'ID');
+        }
+      } catch (error) {
+        console.error('Erreur lors de la génération de l\'audio:', error);
+        
+        let errorMessage = 'Erreur inconnue';
+        if (error instanceof Error) {
+          errorMessage = error.message;
+        } else if (typeof error === 'string') {
+          errorMessage = error;
+        } else if (error && typeof error === 'object') {
+          errorMessage = JSON.stringify(error);
+        }
+        
+        alert(`⚠️ Erreur audio: ${errorMessage}\nLe projet sera sauvegardé sans audio.`);
+        // Continuer la sauvegarde même si l'audio échoue
+      } finally {
+        this.rendering.set(false);
+      }
+    }
 
     this.compositionService.saveComposition(
       this.currentProjectId(),
@@ -237,7 +294,8 @@ export class ComposerComponent implements OnInit {
         description: this.saveDescription(),
         tempo: this.bpm(),
         voicebankId: this.selectedVoicebank()!.id,
-        notes: this.notes()
+        notes: this.notes(),
+        audioFileId: audioFileId
       }
     ).subscribe({
       next: (project) => {

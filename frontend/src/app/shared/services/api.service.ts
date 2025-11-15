@@ -49,7 +49,7 @@ export class Api {
   getProjectsByName(name: string): Observable<any> {
     // Pour récupérer les tags d'une relation M2M via la table de jonction Projects_Tags
     // On doit accéder à tags.Tags_id.* pour récupérer les données du tag
-    const fields = '*,likes_count,user_created.*,primary_voicebank.*,tags.Tags_id.*';
+    const fields = '*,likes_count,user_created.*,primary_voicebank.*,tags.Tags_id.*,rendered_audio';
     return this.http.get(`${this.baseUrl}/items/Projects?filter[title][_eq]=${encodeURIComponent(name)}&fields=${fields}`);
   }
 
@@ -90,7 +90,15 @@ export class Api {
   uploadFile(file: File): Observable<{ data: { id: string } }> {
     const formData = new FormData();
     formData.append('file', file);
-    return this.http.post<{ data: { id: string } }>(`${this.baseUrl}/files`, formData);
+    
+    // Le token devrait être ajouté automatiquement par l'interceptor,
+    // mais on le fait explicitement pour les uploads de fichiers
+    const token = localStorage.getItem('directus_access_token');
+    const options = token 
+      ? { headers: { Authorization: `Bearer ${token}` } }
+      : {};
+    
+    return this.http.post<{ data: { id: string } }>(`${this.baseUrl}/files`, formData, options);
   }
 
 

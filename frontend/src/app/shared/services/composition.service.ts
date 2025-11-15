@@ -121,6 +121,7 @@ export class CompositionService {
     tempo: number;
     voicebankId: string;
     notes: Note[];
+    audioFileId?: string;
   }): Observable<ProjectData> {
     // Directus attend un objet JSON, pas une string
     const payload: any = {
@@ -129,8 +130,13 @@ export class CompositionService {
       tempo: data.tempo,
       primary_voicebank: data.voicebankId,
       composition_data: data.notes, // Directus convertit automatiquement en JSON
-      status: 'draft'
+      status: 'published' // Publier automatiquement pour que ce soit visible
     };
+
+    // Ajouter le fichier audio rendu s'il existe
+    if (data.audioFileId) {
+      payload.rendered_audio = data.audioFileId;
+    }
 
     // Ajouter user_created uniquement lors de la création
     if (!projectId && this.currentUserId) {

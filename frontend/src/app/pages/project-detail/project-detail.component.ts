@@ -19,6 +19,20 @@ export class ProjectDetailComponent implements OnInit {
   error = '';
   private readonly DIRECTUS_URL = environment.directusUrl;
 
+  // Lecteur audio
+  isPlaying = false;
+  currentTime = 0;
+  duration = 0;
+  private audio: HTMLAudioElement | null = null;
+
+  get currentTimeRounded(): number {
+    return Math.floor(this.currentTime);
+  }
+
+  get durationRounded(): number {
+    return Math.floor(this.duration);
+  }
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -35,6 +49,14 @@ export class ProjectDetailComponent implements OnInit {
     });
   }
 
+  ngOnDestroy(): void {
+    // Nettoyer le lecteur audio
+    if (this.audio) {
+      this.audio.pause();
+      this.audio = null;
+    }
+  }
+
   private loadProject(title: string): void {
     this.isLoading = true;
     this.error = '';
@@ -43,6 +65,7 @@ export class ProjectDetailComponent implements OnInit {
       next: (response) => {
         if (response && response.data && response.data.length > 0) {
           this.project = response.data[0];
+          this.initAudioPlayer();
           this.isLoading = false;
           this.cd.detectChanges();
         } else {
@@ -58,6 +81,64 @@ export class ProjectDetailComponent implements OnInit {
         this.cd.detectChanges();
       }
     });
+  }
+
+  private initAudioPlayer(): void {
+    if (!this.project?.rendered_audio) return;
+
+    const audioUrl = this.getAudioUrl();
+    if (!audioUrl) return;
+
+    this.audio = new Audio(audioUrl);
+
+    this.audio.addEventListener('loadedmetadata', () => {
+      this.duration = this.audio!.duration;
+      this.cd.detectChanges();
+    });
+
+    this.audio.addEventListener('timeupdate', () => {
+      this.currentTime = this.audio!.currentTime;
+      this.cd.detectChanges();
+    });
+
+    this.audio.addEventListener('ended', () => {
+      this.isPlaying = false;
+      this.currentTime = 0;
+      this.cd.detectChanges();
+    });
+
+    this.audio.addEventListener('error', (e) => {
+      console.error('Erreur de lecture audio:', e);
+    });
+  }
+
+  getAudioUrl(): string | null {
+    if (!this.project?.rendered_audio) return null;
+    return `${this.DIRECTUS_URL}/assets/${this.project.rendered_audio}`;
+  }
+
+  togglePlayPause(): void {
+    if (!this.audio) return;
+
+    if (this.isPlaying) {
+      this.audio.pause();
+    } else {
+      this.audio.play();
+    }
+    this.isPlaying = !this.isPlaying;
+  }
+
+  seek(event: Event): void {
+    if (!this.audio) return;
+    const input = event.target as HTMLInputElement;
+    const time = parseFloat(input.value);
+    this.audio.currentTime = time;
+    this.currentTime = time;
+  }
+
+  getProgress(): number {
+    if (this.duration === 0) return 0;
+    return (this.currentTime / this.duration) * 100;
   }
 
   getCoverImageUrl(): string | null {
