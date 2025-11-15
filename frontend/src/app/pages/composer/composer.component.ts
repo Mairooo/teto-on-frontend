@@ -405,20 +405,27 @@ export class ComposerComponent implements OnInit {
   }
 
   exportProject(): void {
-    if (!this.currentProjectId()) {
-      alert('Veuillez d\'abord sauvegarder le projet');
-      return;
-    }
+    // Exporter la composition actuelle même si elle n'est pas sauvegardée
+    const exportData = {
+      title: this.projectTitle() || 'Composition sans titre',
+      description: this.projectDescription() || '',
+      tempo: this.bpm(),
+      voicebank: this.selectedVoicebank()?.name || '',
+      voicebankId: this.selectedVoicebank()?.id || '',
+      notes: this.notes(),
+      exported_at: new Date().toISOString()
+    };
 
-    this.compositionService.getProject(this.currentProjectId()!).subscribe({
-      next: (project) => {
-        this.compositionService.exportProject(project);
-      },
-      error: (err) => {
-        console.error('Error exporting project:', err);
-        alert('❌ Erreur lors de l\'export');
-      }
-    });
+    const dataStr = JSON.stringify(exportData, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${exportData.title}.utau`;
+    link.click();
+    
+    URL.revokeObjectURL(url);
   }
 
   onFileImport(event: Event): void {

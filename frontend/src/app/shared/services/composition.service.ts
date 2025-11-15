@@ -192,14 +192,15 @@ export class CompositionService {
   }
 
   /**
-   * Exporter un projet en JSON
+   * Exporter un projet en format UTAU
    */
   exportProject(project: ProjectData): void {
     const exportData = {
       title: project.title,
       description: project.description,
       tempo: project.tempo,
-      voicebank: project.primary_voicebank,
+      voicebank: project.primary_voicebank?.name || project.primary_voicebank,
+      voicebankId: project.primary_voicebank?.id || '',
       notes: this.loadCompositionNotes(project),
       exported_at: new Date().toISOString()
     };
@@ -210,7 +211,7 @@ export class CompositionService {
     
     const link = document.createElement('a');
     link.href = url;
-    link.download = `${project.title || 'project'}.json`;
+    link.download = `${project.title || 'project'}.utau`;
     link.click();
     
     URL.revokeObjectURL(url);

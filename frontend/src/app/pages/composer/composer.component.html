@@ -29,7 +29,7 @@
         </button>
         <label class="h-9 px-3 rounded-md border border-gray-300 text-sm hover:bg-gray-50 transition-colors cursor-pointer flex items-center">
           Importer
-          <input type="file" accept=".json" (change)="onFileImport($event)" class="hidden" />
+          <input type="file" accept=".utau,.json" (change)="onFileImport($event)" class="hidden" />
         </label>
         <button (click)="exportProject()" 
                 class="h-9 px-3 rounded-md bg-black text-white text-sm hover:bg-gray-800 transition-colors">

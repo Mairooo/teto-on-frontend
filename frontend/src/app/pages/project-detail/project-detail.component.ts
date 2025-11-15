@@ -117,6 +117,18 @@ export class ProjectDetailComponent implements OnInit {
     return `${this.DIRECTUS_URL}/assets/${this.project.rendered_audio}`;
   }
 
+  downloadAudio(): void {
+    if (!this.project?.rendered_audio) return;
+
+    const url = `${this.DIRECTUS_URL}/assets/${this.project.rendered_audio}?download`;
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${this.project.title}.wav`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
   togglePlayPause(): void {
     if (!this.audio) return;
 
@@ -225,5 +237,55 @@ export class ProjectDetailComponent implements OnInit {
         alert('Lien copié dans le presse-papier !');
       });
     }
+  }
+
+  downloadUSTFile(): void {
+    if (!this.project) return;
+
+    // Récupérer les données de composition depuis le projet
+    const projectData = this.project as any;
+    const compositionData = projectData.composition_data;
+
+    if (!compositionData) {
+      alert('Aucune donnée de composition disponible');
+      return;
+    }
+
+    // Convertir les données en format JSON
+    let notes;
+    if (typeof compositionData === 'string') {
+      try {
+        notes = JSON.parse(compositionData);
+      } catch (e) {
+        console.error('Erreur lors du parsing de la composition:', e);
+        alert('Erreur lors de la lecture des données de composition');
+        return;
+      }
+    } else {
+      notes = compositionData;
+    }
+
+    // Créer un objet avec toutes les données nécessaires pour réimporter
+    const utauData = {
+      title: this.project.title,
+      description: this.project.description || '',
+      tempo: this.project.tempo || 120,
+      notes: notes,
+      voicebank: projectData.primary_voicebank?.name || '',
+      voicebankId: projectData.primary_voicebank?.id || ''
+    };
+
+    // Créer le fichier .utau (format JSON)
+    const blob = new Blob([JSON.stringify(utauData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    
+    // Créer un lien de téléchargement et le déclencher
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${this.project.title}.utau`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   }
 }

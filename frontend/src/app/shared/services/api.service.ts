@@ -49,7 +49,7 @@ export class Api {
   getProjectsByName(name: string): Observable<any> {
     // Pour récupérer les tags d'une relation M2M via la table de jonction Projects_Tags
     // On doit accéder à tags.Tags_id.* pour récupérer les données du tag
-    const fields = '*,likes_count,user_created.*,primary_voicebank.*,tags.Tags_id.*,rendered_audio';
+    const fields = '*,likes_count,user_created.*,primary_voicebank.*,tags.Tags_id.*,rendered_audio,composition_data';
     return this.http.get(`${this.baseUrl}/items/Projects?filter[title][_eq]=${encodeURIComponent(name)}&fields=${fields}`);
   }
 

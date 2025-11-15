@@ -134,15 +134,14 @@
                 </svg>
               </button>
               @if (project.rendered_audio) {
-                <a 
-                  [href]="getAudioUrl()"
-                  download
+                <button 
+                  (click)="downloadAudio()"
                   class="p-2.5 text-gray-600 hover:text-gray-900 transition-colors rounded-lg hover:bg-gray-100" 
                   title="Télécharger l'audio">
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
                   </svg>
-                </a>
+                </button>
               }
             </div>
           </div>
@@ -178,24 +177,50 @@
             
             <div class="space-y-3">
               <!-- Fichier UTAU principal -->
-              <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+              <button 
+                (click)="downloadUSTFile()"
+                class="w-full flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
                 <div class="flex items-center gap-3">
                   <div class="w-10 h-10 bg-white border border-gray-200 rounded-lg flex items-center justify-center">
                     <svg class="w-5 h-5 text-gray-700" fill="currentColor" viewBox="0 0 20 20">
                       <path d="M18 3a1 1 0 00-1.196-.98l-10 2A1 1 0 006 5v9.114A4.369 4.369 0 005 14c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V7.82l8-1.6v5.894A4.369 4.369 0 0015 12c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V3z"/>
                     </svg>
                   </div>
-                  <div>
-                    <p class="font-medium text-gray-900">{{ project.title }}.ust</p>
-                    <p class="text-sm text-gray-600">Fichier UTAU principal</p>
+                  <div class="text-left">
+                    <p class="font-medium text-gray-900">{{ project.title }}.utau</p>
+                    <p class="text-sm text-gray-600">Fichier de composition à réimporter</p>
                   </div>
                 </div>
-                <button class="p-2 text-gray-600 hover:text-gray-900 transition-colors">
+                <div class="p-2 text-gray-600 hover:text-gray-900 transition-colors">
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
                   </svg>
+                </div>
+              </button>
+
+              <!-- Fichier audio rendu -->
+              @if (project.rendered_audio) {
+                <button 
+                  (click)="downloadAudio()"
+                  class="w-full flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
+                  <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-white border border-gray-200 rounded-lg flex items-center justify-center">
+                      <svg class="w-5 h-5 text-gray-700" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M18 3a1 1 0 00-1.196-.98l-10 2A1 1 0 006 5v9.114A4.369 4.369 0 005 14c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V7.82l8-1.6v5.894A4.369 4.369 0 0015 12c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V3z"/>
+                      </svg>
+                    </div>
+                    <div class="text-left">
+                      <p class="font-medium text-gray-900">{{ project.title }}.wav</p>
+                      <p class="text-sm text-gray-600">Rendu audio final</p>
+                    </div>
+                  </div>
+                  <div class="p-2 text-gray-600 hover:text-gray-900 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                    </svg>
+                  </div>
                 </button>
-              </div>
+              }
             </div>
           </div>
         </div>
