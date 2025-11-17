@@ -1,6 +1,6 @@
 import { NgModule, provideBrowserGlobalErrorListeners, provideZonelessChangeDetection } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
-import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { provideHttpClient, withInterceptors, withFetch } from '@angular/common/http';
 import { ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { authInterceptor } from './shared/interceptors/auth.interceptor';
@@ -25,7 +25,10 @@ import { ProjectDetailComponent } from './pages/project-detail/project-detail.co
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideZonelessChangeDetection(),
-    provideHttpClient(withInterceptors([authInterceptor]))
+    provideHttpClient(
+      withFetch(), // Utilise Fetch API avec credentials pour les cookies
+      withInterceptors([authInterceptor])
+    )
   ],
   bootstrap: [App]
 })
