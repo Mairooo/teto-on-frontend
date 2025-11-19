@@ -1,6 +1,6 @@
 import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { VoicebankService, Voicebank } from '../../shared/services/voicebank.service';
 import { CompositionService, ProjectData } from '../../shared/services/composition.service';
@@ -49,11 +49,33 @@ export class ComposerComponent implements OnInit {
     private voicebankService: VoicebankService,
     private compositionService: CompositionService,
     private audioRenderer: AudioRendererService,
-    private api: Api
+    private api: Api,
+    private route: ActivatedRoute,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
-    this.loadVoicebanks();
+    // Charger le projet si un projectId est passé en query params
+    this.route.queryParams.subscribe(params => {
+      const projectId = params['projectId'];
+      if (projectId) {
+        // Attendre que les voicebanks soient chargées avant de charger le projet
+        this.voicebankService.getVoicebanks().subscribe({
+          next: (banks) => {
+            this.voicebanks.set(banks);
+            if (banks.length > 0 && !this.selectedVoicebank()) {
+              this.onSelectVoicebank(banks[0]);
+            }
+            // Maintenant charger le projet
+            this.loadProjectById(projectId);
+          },
+          error: (err) => console.error('Error loading voicebanks:', err)
+        });
+      } else {
+        // Chargement normal des voicebanks si pas de projet à charger
+        this.loadVoicebanks();
+      }
+    });
   }
 
   loadVoicebanks(): void {
@@ -223,7 +245,16 @@ export class ComposerComponent implements OnInit {
   }
 
   async saveProject(): Promise<void> {
-    const title = this.saveTitle().trim();
+    // Si un projet est déjà chargé, utiliser ses valeurs
+    // Sinon, utiliser les valeurs de la dialog
+    const title = this.currentProjectId() 
+      ? this.projectTitle().trim() 
+      : this.saveTitle().trim();
+    
+    const description = this.currentProjectId()
+      ? this.projectDescription()
+      : this.saveDescription();
+    
     if (!title) {
       alert('Veuillez donner un titre au projet');
       return;
@@ -291,7 +322,7 @@ export class ComposerComponent implements OnInit {
       this.currentProjectId(),
       {
         title: title,
-        description: this.saveDescription(),
+        description: description,
         tempo: this.bpm(),
         voicebankId: this.selectedVoicebank()!.id,
         notes: this.notes(),
@@ -304,7 +335,9 @@ export class ComposerComponent implements OnInit {
         this.projectTitle.set(project.title);
         this.projectDescription.set(project.description || '');
         this.closeSaveDialog();
-        alert('✅ Projet sauvegardé avec succès !');
+        
+        // Rediriger vers le profil après la sauvegarde
+        this.router.navigate(['/profile']);
       },
       error: (err) => {
         console.error('Error saving project:', err);
@@ -335,14 +368,34 @@ export class ComposerComponent implements OnInit {
     });
   }
 
-  loadProject(project: ProjectData): void {
+  loadProjectById(projectId: string): void {
+    console.log('Loading project with ID:', projectId);
+    this.compositionService.getProject(projectId).subscribe({
+      next: (project) => {
+        console.log('Project loaded successfully:', project);
+        this.loadProject(project, false); // Ne pas afficher l'alerte quand c'est depuis queryParams
+      },
+      error: (err) => {
+        console.error('Error loading project:', err);
+        console.error('Error details:', err.error, err.message, err.status);
+        alert(`❌ Erreur lors du chargement du projet: ${err.error?.errors?.[0]?.message || err.message || 'Erreur inconnue'}`);
+      }
+    });
+  }
+
+  loadProject(project: ProjectData, showAlert: boolean = true): void {
+    console.log('Loading project into composer:', project);
+    
     this.currentProjectId.set(project.id);
     this.projectTitle.set(project.title);
     this.projectDescription.set(project.description || '');
     this.bpm.set(project.tempo);
     
     // Charger les notes
+    console.log('Composition data:', project.composition_data);
     const notes = this.compositionService.loadCompositionNotes(project);
+    console.log('Loaded notes:', notes);
+    console.log('Number of notes:', notes.length);
     this.notes.set(notes);
 
     // Trouver et sélectionner la voicebank
@@ -358,7 +411,9 @@ export class ComposerComponent implements OnInit {
     }
 
     this.closeLoadDialog();
-    alert('✅ Projet chargé avec succès !');
+    if (showAlert) {
+      alert('✅ Projet chargé avec succès !');
+    }
   }
 
   deleteProject(project: ProjectData, event: Event): void {

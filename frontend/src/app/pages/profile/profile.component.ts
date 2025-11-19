@@ -1,5 +1,5 @@
 import { Component, OnInit, afterNextRender, inject, ChangeDetectorRef } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
@@ -20,21 +20,24 @@ type ProjectItem = {
   status?: string;
   likes_count?: number;
   plays?: number;
+  duration?: number;
 };
 
 type ProjectViewModel = {
   id: string;
   title: string;
+  description?: string;
   coverImageUrl?: string;
   status?: string;
   likes?: number;
   plays?: number;
+  duration?: string;
 };
 
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterModule],
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.css']
 })
@@ -49,9 +52,12 @@ export class ProfileComponent implements OnInit {
   user?: User;
   avatarUrl?: string;
   projectCount = 0;
+  totalLikes = 0;
   private userId: string | null = null;
   projects: ProjectViewModel[] = [];
+  likedProjects: ProjectViewModel[] = [];
   errorMessage: string | null = null;
+  activeTab: 'projects' | 'liked' = 'projects';
 
   constructor() {
     // afterNextRender doit être appelé dans un contexte d'injection (ex: constructeur)
@@ -66,6 +72,7 @@ export class ProfileComponent implements OnInit {
       
       await this.loadProjectCount();
       await this.loadProjects();
+      await this.loadLikedProjects(); // Charger les favoris dès le début
       this.cdr.detectChanges();
     });
   }
@@ -102,7 +109,7 @@ export class ProfileComponent implements OnInit {
   private async loadProjects(): Promise<void> {
     try {
       if (!this.userId) return;
-      const fields = ['id','title','description','cover_image','status','likes_count','plays'];
+      const fields = ['id','title','description','cover_image','status','likes_count','plays','duration'];
       const resp = await this.api.getUserProjects(this.userId, fields).toPromise();
       const items = (resp?.data ?? []) as unknown as ProjectItem[];
       this.projects = items.map((p) => {
@@ -111,15 +118,118 @@ export class ProfileComponent implements OnInit {
         return {
           id: p.id,
           title: p.title,
+          description: p.description || undefined,
           coverImageUrl,
           status: p.status,
           likes: p.likes_count || 0,
-          plays: p.plays
+          plays: p.plays,
+          duration: this.formatDuration(p.duration)
         } as ProjectViewModel;
       });
+      
+      // Mettre à jour le compteur avec le nombre réel de projets
+      this.projectCount = this.projects.length;
+      
+      // Calculer le total des likes
+      this.totalLikes = this.projects.reduce((sum, p) => sum + (p.likes || 0), 0);
     } catch (error: any) {
       this.errorMessage = 'Erreur lors du chargement des projets.';
     }
+  }
+
+  editProject(projectId: string): void {
+    // Rediriger vers la page d'édition du projet
+    this.router.navigate(['/project/edit', projectId]);
+  }
+
+  deleteProject(projectId: string): void {
+    if (confirm('Êtes-vous sûr de vouloir supprimer ce projet ?')) {
+      const token = this.auth.accessToken;
+      if (!token) return;
+      
+      this.api.deleteProjects(projectId, token).subscribe({
+        next: () => {
+          // Retirer le projet de la liste
+          this.projects = this.projects.filter(p => p.id !== projectId);
+          this.projectCount--;
+          this.cdr.detectChanges();
+        },
+        error: (error) => {
+          console.error('Erreur lors de la suppression du projet:', error);
+          alert('Erreur lors de la suppression du projet.');
+        }
+      });
+    }
+  }
+
+  setActiveTab(tab: 'projects' | 'liked'): void {
+    this.activeTab = tab;
+  }
+
+  private async loadLikedProjects(): Promise<void> {
+    try {
+      if (!this.userId) return;
+      
+      const resp = await this.api.getUserLikedProjects(this.userId).toPromise();
+      const items = (resp?.data ?? []) as any[];
+      
+      this.likedProjects = items
+        .filter(like => like.project_id) // Filtrer les likes sans projet
+        .map((like: any) => {
+          const p = like.project_id;
+          const coverId = typeof p.cover_image === 'string' ? p.cover_image : (p.cover_image?.id);
+          const coverImageUrl = coverId ? `${this.DIRECTUS_URL}/assets/${coverId}?width=480&height=270&fit=cover&quality=80&format=webp` : undefined;
+          
+          return {
+            id: p.id,
+            title: p.title,
+            description: p.description || undefined,
+            coverImageUrl,
+            status: p.status,
+            likes: p.likes_count || 0,
+            plays: p.plays,
+            duration: this.formatDuration(p.duration)
+          } as ProjectViewModel;
+        });
+    } catch (error: any) {
+      console.error('Erreur lors du chargement des projets likés:', error);
+      this.likedProjects = [];
+    }
+  }
+
+  onLogout(): void {
+    localStorage.removeItem('directus_access_token');
+    this.router.navigate(['/login']);
+  }
+
+  getFullName(): string {
+    if (!this.user) return 'VocaloidFan123';
+    const firstName = this.user.first_name || '';
+    const lastName = this.user.last_name || '';
+    const fullName = `${firstName} ${lastName}`.trim();
+    return fullName || 'VocaloidFan123';
+  }
+
+  getUserInitial(): string {
+    if (!this.user) return 'V';
+    const name = this.getFullName();
+    return name.charAt(0).toUpperCase();
+  }
+
+  private formatDuration(duration?: number): string {
+    if (!duration || duration <= 0) return '0:00';
+    
+    // La durée peut être en secondes ou en millisecondes, testons
+    let totalSeconds = duration;
+    
+    // Si la valeur est très grande, c'est probablement en millisecondes
+    if (duration > 10000) {
+      totalSeconds = Math.floor(duration / 1000);
+    }
+    
+    const mins = Math.floor(totalSeconds / 60);
+    const secs = Math.floor(totalSeconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   }
 }
 

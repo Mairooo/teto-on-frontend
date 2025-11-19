@@ -13,10 +13,18 @@ export class TagService {
   constructor(private http: HttpClient) {}
 
   /**
-   * Récupère tous les tags disponibles
+   * Récupère tous les tags disponibles, triés par nom
    */
   getAllTags(): Observable<{ data: Tag[] }> {
-    return this.http.get<{ data: Tag[] }>(`${this.baseUrl}/items/Tags`);
+    return this.http.get<{ data: Tag[] }>(`${this.baseUrl}/items/Tags?sort=name`);
+  }
+
+  /**
+   * Récupère les tags les plus populaires (limité à un nombre spécifique)
+   * Pour l'instant, retourne simplement les N premiers tags par ordre alphabétique
+   */
+  getPopularTags(limit: number = 6): Observable<{ data: Tag[] }> {
+    return this.http.get<{ data: Tag[] }>(`${this.baseUrl}/items/Tags?sort=name&limit=${limit}`);
   }
 
   /**

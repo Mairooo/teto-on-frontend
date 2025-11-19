@@ -9,6 +9,7 @@ import { SettingsComponent } from './pages/settings/settings.component';
 import { ComposerComponent } from './pages/composer/composer.component';
 import { SearchResultsComponent } from './pages/search-results/search-results.component';
 import { ProjectDetailComponent } from './pages/project-detail/project-detail.component';
+import { ProjectEditComponent } from './pages/project-edit/project-edit.component';
 import { authGuard } from './shared/guards/auth.guard';
 
 const routes: Routes = [
@@ -19,6 +20,7 @@ const routes: Routes = [
   { path: 'profile', component: ProfileComponent, canActivate: [authGuard] },
   { path: 'settings', component: SettingsComponent, canActivate: [authGuard] },
   { path: 'composer', component: ComposerComponent, canActivate: [authGuard] },
+  { path: 'project/edit/:id', component: ProjectEditComponent, canActivate: [authGuard] },
   { path: 'search', component: SearchResultsComponent },
   { path: 'project/:title', component: ProjectDetailComponent },
   { path: '**', redirectTo: '' }

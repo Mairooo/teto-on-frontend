@@ -43,7 +43,15 @@ export class CompositionService {
    * Récupérer l'utilisateur connecté
    */
   private getCurrentUser(): void {
-    this.http.get<any>(`${this.apiUrl}/users/me`).subscribe({
+    const token = localStorage.getItem('directus_access_token');
+    if (!token) {
+      console.warn('No token found, user_created will not be set automatically');
+      return;
+    }
+
+    this.http.get<any>(`${this.apiUrl}/users/me`, {
+      headers: { Authorization: `Bearer ${token}` }
+    }).subscribe({
       next: (response) => {
         this.currentUserId = response.data?.id;
         console.log('Current user ID:', this.currentUserId);
@@ -61,8 +69,8 @@ export class CompositionService {
     // Filtrer par utilisateur connecté
     return this.http.get<any>(`${this.apiUrl}/items/Projects`, {
       params: {
-        fields: 'id,title,description,tempo,primary_voicebank.*,composition_data,status,cover_image,date_created,date_updated,user_created',
-        sort: '-date_updated',
+        fields: 'id,title,description,tempo,primary_voicebank.*,composition_data,status,cover_image',
+        sort: '-id',
         filter: JSON.stringify({
           user_created: {
             _eq: '$CURRENT_USER'
@@ -80,7 +88,7 @@ export class CompositionService {
   getProject(id: string): Observable<ProjectData> {
     return this.http.get<any>(`${this.apiUrl}/items/Projects/${id}`, {
       params: {
-        fields: 'id,title,description,tempo,primary_voicebank.*,composition_data,status,cover_image,date_created,date_updated,user_created'
+        fields: 'id,title,description,tempo,primary_voicebank.*,composition_data,status,cover_image'
       }
     }).pipe(
       map(response => response.data)
@@ -129,8 +137,7 @@ export class CompositionService {
       description: data.description,
       tempo: data.tempo,
       primary_voicebank: data.voicebankId,
-      composition_data: data.notes, // Directus convertit automatiquement en JSON
-      status: 'published' // Publier automatiquement pour que ce soit visible
+      composition_data: data.notes // Directus convertit automatiquement en JSON
     };
 
     // Ajouter le fichier audio rendu s'il existe
@@ -138,10 +145,14 @@ export class CompositionService {
       payload.rendered_audio = data.audioFileId;
     }
 
-    // Ajouter user_created uniquement lors de la création
-    if (!projectId && this.currentUserId) {
-      payload.user_created = this.currentUserId;
+    // Lors de la création uniquement : définir le status et l'utilisateur
+    if (!projectId) {
+      payload.status = '1'; // 1 = published (pour que ce soit visible)
+      if (this.currentUserId) {
+        payload.user_created = this.currentUserId;
+      }
     }
+    // Lors de la mise à jour : ne pas toucher au status (garder celui existant)
 
     console.log('Payload to send:', payload);
 

@@ -53,6 +53,11 @@ export class Api {
     return this.http.get(`${this.baseUrl}/items/Projects?filter[title][_eq]=${encodeURIComponent(name)}&fields=${fields}`);
   }
 
+  getProjectById(id: string): Observable<any> {
+    const fields = '*,likes_count,user_created.*,primary_voicebank.*,tags.Tags_id.*,rendered_audio,composition_data';
+    return this.http.get(`${this.baseUrl}/items/Projects/${encodeURIComponent(id)}?fields=${fields}`);
+  }
+
   updateProjects(name: string, ProjectsData: any, token: string): Observable<any> {
     return this.http.patch(`${this.baseUrl}/items/Projects/${name}`, ProjectsData, {
       headers: { Authorization: `Bearer ${token}` }
@@ -149,6 +154,15 @@ updateProjectsById(ProjectsId: string, ProjectsData: any, token: string): Observ
   return this.http.patch(`${this.baseUrl}/items/Projects/${ProjectsId}`, ProjectsData, {
     headers: { Authorization: `Bearer ${token}` }
   });
+}
+
+// Nouvelle méthode qui utilise l'interceptor pour le token
+updateProject(projectId: string, projectData: any): Observable<any> {
+  return this.http.patch(`${this.baseUrl}/items/Projects/${projectId}`, projectData);
+}
+
+createProject(projectData: any): Observable<any> {
+  return this.http.post(`${this.baseUrl}/items/Projects`, projectData);
 }
 
 // ---------------- Project Stats ----------------
@@ -292,6 +306,65 @@ recordUserPlay(projectId: string): Observable<any> {
       }
     });
   });
+}
+
+// ---------------- Project Likes ----------------
+
+/**
+ * Récupérer les projets likés par un utilisateur
+ * @param userId ID de l'utilisateur
+ * @returns Observable avec les projets likés
+ */
+getUserLikedProjects(userId: string): Observable<any> {
+  const token = localStorage.getItem('directus_access_token');
+  if (!token) {
+    return new Observable(observer => {
+      observer.next({ data: [] });
+      observer.complete();
+    });
+  }
+
+  // Récupérer les likes avec les détails des projets via la relation
+  const fields = 'project_id.id,project_id.title,project_id.description,project_id.cover_image,project_id.status,project_id.likes_count,project_id.plays,project_id.duration';
+  return this.http.get(
+    `${this.baseUrl}/items/projects_likes?filter[user_id][_eq]=${encodeURIComponent(userId)}&fields=${encodeURIComponent(fields)}`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+}
+
+/**
+ * Liker un projet
+ * @param projectId ID du projet
+ * @returns Observable
+ */
+likeProject(projectId: string): Observable<any> {
+  const token = localStorage.getItem('directus_access_token');
+  if (!token) {
+    return new Observable(observer => observer.error('Non authentifié'));
+  }
+
+  return this.http.post(
+    `${this.baseUrl}/items/projects_likes`,
+    { project_id: projectId },
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+}
+
+/**
+ * Unliker un projet
+ * @param likeId ID du like à supprimer
+ * @returns Observable
+ */
+unlikeProject(likeId: string): Observable<any> {
+  const token = localStorage.getItem('directus_access_token');
+  if (!token) {
+    return new Observable(observer => observer.error('Non authentifié'));
+  }
+
+  return this.http.delete(
+    `${this.baseUrl}/items/projects_likes/${encodeURIComponent(likeId)}`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
 }
 
 

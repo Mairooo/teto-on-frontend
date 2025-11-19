@@ -1,38 +1,240 @@
-<main class="pt-16">
-  <section class="bg-white">
-    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div class="flex items-center gap-4 mb-6">
-        <div class="w-20 h-20 rounded-full bg-gray-200 overflow-hidden">
-          <img *ngIf="avatarUrl" [src]="avatarUrl" alt="Avatar" class="w-full h-full object-cover" />
+<!-- Header fixe avec navigation -->
+<header class="fixed top-0 left-0 right-0 z-50 w-full border-b border-gray-200 bg-white/95 backdrop-blur-sm shadow-sm">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex h-16 items-center justify-between">
+      <!-- Logo -->
+      <div class="flex items-center gap-3">
+        <a routerLink="/" class="flex items-center gap-2 cursor-pointer">
+          <div class="w-8 h-8 bg-gray-900 rounded-lg flex items-center justify-center">
+            <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M18 3a1 1 0 00-1.196-.98l-10 2A1 1 0 006 5v9.114A4.369 4.369 0 005 14c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V7.82l8-1.6v5.894A4.369 4.369 0 0015 12c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V3z"/>
+            </svg>
+          </div>
+          <span class="text-lg font-semibold text-gray-900">UTAU Community</span>
+        </a>
+      </div>
+      
+      <!-- Navigation -->
+      <nav class="hidden md:flex items-center gap-8 text-sm text-gray-700">
+        <a routerLink="/" class="hover:text-gray-900 transition-colors cursor-pointer">Home</a>
+        <a routerLink="/composer" class="hover:text-gray-900 transition-colors cursor-pointer">Compose</a>
+        <a routerLink="/search" class="hover:text-gray-900 transition-colors cursor-pointer">Search</a>
+        <a routerLink="/profile" class="font-medium text-gray-900 cursor-pointer">Profile</a>
+      </nav>
+      
+      <!-- Actions -->
+      <div class="flex items-center gap-2">
+        <button (click)="onLogout()" class="h-9 px-3 rounded-md bg-black text-white text-sm hover:bg-gray-800 transition-colors">
+          Se déconnecter
+        </button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Contenu principal -->
+<main class="pt-16 bg-gray-50 min-h-screen">
+  <!-- Section profil -->
+  <section class="bg-white border-b border-gray-200">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div class="flex flex-col md:flex-row gap-8">
+        <!-- Avatar -->
+        <div class="flex-shrink-0">
+          <div class="w-32 h-32 md:w-40 md:h-40 rounded-full bg-gray-900 overflow-hidden flex items-center justify-center text-white text-5xl font-semibold shadow-lg">
+            <img *ngIf="avatarUrl" [src]="avatarUrl" alt="Avatar" class="w-full h-full object-cover" />
+            <span *ngIf="!avatarUrl">{{ getUserInitial() }}</span>
+          </div>
         </div>
-        <div>
-      <div class="text-xl font-semibold text-gray-900">{{ (user?.first_name || '') + ' ' + (user?.last_name || '') }}</div>
-          <div class="text-sm text-gray-500">{{ projectCount }} projets</div>
+
+        <!-- Informations du profil -->
+        <div class="flex-1">
+          <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4">
+            <h1 class="text-2xl md:text-3xl font-bold text-gray-900">
+              {{ getFullName() }}
+            </h1>
+            <button routerLink="/settings" class="self-start px-4 py-2 rounded-lg border border-gray-300 text-sm font-medium hover:bg-gray-50 transition-colors flex items-center gap-2">
+              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/>
+              </svg>
+              Paramètres
+            </button>
+          </div>
+
+          <p *ngIf="user?.description" class="text-gray-700 mb-6 text-base">
+            {{ user?.description }}
+          </p>
+
+          <!-- Statistiques -->
+          <div class="flex gap-8 text-gray-900">
+            <div>
+              <span class="font-bold text-xl">{{ projectCount }}</span>
+              <span class="text-gray-600 ml-1 text-base">Projets</span>
+            </div>
+            <div>
+              <span class="font-bold text-xl">{{ totalLikes }}</span>
+              <span class="text-gray-600 ml-1 text-base">Likes</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Onglets -->
+  <section class="bg-white border-b border-gray-200">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between">
+        <div class="flex gap-8">
+          <button 
+            (click)="setActiveTab('projects')" 
+            [class.border-b-2]="activeTab === 'projects'"
+            [class.border-gray-900]="activeTab === 'projects'"
+            [class.text-gray-900]="activeTab === 'projects'"
+            [class.font-medium]="activeTab === 'projects'"
+            [class.text-gray-500]="activeTab !== 'projects'"
+            class="py-4 px-2 transition-colors hover:text-gray-900">
+            Projets
+          </button>
+          <button 
+            (click)="setActiveTab('liked')" 
+            [class.border-b-2]="activeTab === 'liked'"
+            [class.border-gray-900]="activeTab === 'liked'"
+            [class.text-gray-900]="activeTab === 'liked'"
+            [class.font-medium]="activeTab === 'liked'"
+            [class.text-gray-500]="activeTab !== 'liked'"
+            class="py-4 px-2 transition-colors hover:text-gray-900">
+            Mes favoris
+          </button>
+        </div>
+        
+        <!-- Bouton nouveau projet -->
+        <button 
+          routerLink="/project/edit/new"
+          class="px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+          </svg>
+          Nouveau projet
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contenu des onglets -->
+  <section class="py-8">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+      <!-- Message d'erreur -->
+      <div *ngIf="errorMessage" class="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+        {{ errorMessage }}
+      </div>
+
+      <!-- Tab: Projets -->
+      <div *ngIf="activeTab === 'projects'">
+        <div *ngIf="!errorMessage && projects.length === 0" class="text-center py-16 text-gray-500">
+          <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/>
+          </svg>
+          <p class="text-lg">Aucun projet pour le moment.</p>
+        </div>
+        <div *ngIf="!errorMessage && projects.length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <article *ngFor="let p of projects" class="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+            <!-- Image avec durée -->
+            <div class="relative aspect-video bg-gradient-to-br from-gray-200 to-gray-300">
+              <img *ngIf="p.coverImageUrl" [src]="p.coverImageUrl" alt="{{ p.title }}" class="w-full h-full object-cover" />
+              <div *ngIf="!p.coverImageUrl" class="w-full h-full flex items-center justify-center text-gray-400">
+                <svg class="w-12 h-12" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M18 3a1 1 0 00-1.196-.98l-10 2A1 1 0 006 5v9.114A4.369 4.369 0 005 14c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V7.82l8-1.6v5.894A4.369 4.369 0 0015 12c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V3z"/>
+                </svg>
+              </div>
+              <div *ngIf="p.duration" class="absolute bottom-2 right-2 bg-black/80 text-white text-xs px-2 py-1 rounded">
+                {{ p.duration }}
+              </div>
+            </div>
+            
+            <!-- Contenu -->
+            <div class="p-4">
+              <h3 class="text-lg font-semibold text-gray-900 mb-1">{{ p.title }}</h3>
+              <p *ngIf="p.description" class="text-sm text-gray-600 mb-3 line-clamp-2">{{ p.description }}</p>
+              
+              <!-- Stats et actions -->
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4 text-sm text-gray-600">
+                  <span class="flex items-center gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                    </svg>
+                    {{ p.likes || 0 }}
+                  </span>
+                  <span class="flex items-center gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    {{ p.plays || 0 }}
+                  </span>
+                </div>
+                
+                <div class="flex items-center gap-2">
+                  <button (click)="editProject(p.id)" class="p-2 text-gray-600 hover:text-blue-600 transition-colors" title="Modifier">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                    </svg>
+                  </button>
+                  <button (click)="deleteProject(p.id)" class="p-2 text-gray-600 hover:text-red-600 transition-colors" title="Supprimer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </article>
         </div>
       </div>
 
-    <div *ngIf="user?.description" class="text-gray-700 mb-6">{{ user?.description }}</div>
-
-      <div class="mt-8">
-        <h2 class="text-lg font-semibold text-gray-900 mb-4">Mes projets</h2>
-        
-        <!-- Message d'erreur -->
-        <div *ngIf="errorMessage" class="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
-          {{ errorMessage }}
+      <!-- Tab: Likés -->
+      <div *ngIf="activeTab === 'liked'">
+        <div *ngIf="likedProjects.length === 0" class="text-center py-16 text-gray-500">
+          <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+          </svg>
+          <p class="text-lg">Aucun projet liké pour le moment.</p>
         </div>
-        
-        <div *ngIf="!errorMessage && projects.length === 0" class="text-gray-500">Aucun projet pour le moment.</div>
-        <div *ngIf="!errorMessage && projects.length > 0" class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          <article *ngFor="let p of projects" class="rounded-lg border border-gray-200 overflow-hidden bg-white shadow-sm">
-            <div class="aspect-video bg-gray-100 overflow-hidden">
-              <img *ngIf="p.coverImageUrl" [src]="p.coverImageUrl" alt="Cover" class="w-full h-full object-cover" />
+        <div *ngIf="likedProjects.length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <article *ngFor="let p of likedProjects" class="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+            <!-- Image avec durée -->
+            <div class="relative aspect-video bg-gradient-to-br from-gray-200 to-gray-300">
+              <img *ngIf="p.coverImageUrl" [src]="p.coverImageUrl" alt="{{ p.title }}" class="w-full h-full object-cover" />
+              <div *ngIf="!p.coverImageUrl" class="w-full h-full flex items-center justify-center text-gray-400">
+                <svg class="w-12 h-12" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M18 3a1 1 0 00-1.196-.98l-10 2A1 1 0 006 5v9.114A4.369 4.369 0 005 14c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V7.82l8-1.6v5.894A4.369 4.369 0 0015 12c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V3z"/>
+                </svg>
+              </div>
+              <div *ngIf="p.duration" class="absolute bottom-2 right-2 bg-black/80 text-white text-xs px-2 py-1 rounded">
+                {{ p.duration }}
+              </div>
             </div>
+            
+            <!-- Contenu -->
             <div class="p-4">
-              <h3 class="font-medium text-gray-900 truncate" title="{{ p.title }}">{{ p.title }}</h3>
-              <div class="mt-2 text-xs text-gray-500 flex items-center gap-4">
-                <span>Status: {{ p.status || 'draft' }}</span>
-                <span>Likes: {{ p.likes || 0 }}</span>
-                <span>Plays: {{ p.plays || 0 }}</span>
+              <h3 class="text-lg font-semibold text-gray-900 mb-1">{{ p.title }}</h3>
+              <p *ngIf="p.description" class="text-sm text-gray-600 mb-3 line-clamp-2">{{ p.description }}</p>
+              
+              <!-- Stats -->
+              <div class="flex items-center gap-4 text-sm text-gray-600">
+                <span class="flex items-center gap-1">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                  </svg>
+                  {{ p.likes || 0 }}
+                </span>
+                <span class="flex items-center gap-1">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  {{ p.plays || 0 }}
+                </span>
               </div>
             </div>
           </article>

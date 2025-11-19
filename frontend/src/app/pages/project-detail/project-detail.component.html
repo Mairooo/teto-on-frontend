@@ -283,7 +283,7 @@
               <div class="flex flex-wrap gap-2">
                 @for (tagRelation of project.tags; track tagRelation.Tags_id?.id) {
                   @if (tagRelation.Tags_id) {
-                    <span class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors cursor-pointer">
+                    <span class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-200 transition-colors cursor-pointer">
                       {{ tagRelation.Tags_id.name }}
                     </span>
                   }

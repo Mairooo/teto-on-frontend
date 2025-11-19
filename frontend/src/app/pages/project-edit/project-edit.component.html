@@ -1,0 +1,249 @@
+<header class="border-b border-gray-200 bg-white">
+  <div class="max-w-6xl mx-auto px-6">
+    <div class="flex h-16 items-center justify-between">
+      <a routerLink="/" class="flex items-center gap-2 cursor-pointer">
+        <div class="w-10 h-10 bg-gray-900 rounded-lg flex items-center justify-center">
+          <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M18 3a1 1 0 00-1.196-.98l-10 2A1 1 0 006 5v9.114A4.369 4.369 0 005 14c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V7.82l8-1.6v5.894A4.369 4.369 0 0015 12c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V3z"/>
+          </svg>
+        </div>
+        <span class="text-xl font-bold text-gray-900">UTAU</span>
+      </a>
+      <button (click)="cancel()" class="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+        </svg>
+        <span class="font-medium">Retour</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main class="bg-white min-h-screen">
+  <div *ngIf="isLoading" class="flex flex-col items-center justify-center py-32">
+    <div class="w-12 h-12 border-4 border-gray-200 border-t-gray-900 rounded-full animate-spin"></div>
+    <p class="mt-4 text-gray-600">Chargement du projet...</p>
+  </div>
+
+  <div *ngIf="!isLoading">
+    <section>
+      <div class="max-w-6xl mx-auto px-6 pt-10 pb-6">
+        <div class="flex items-start justify-between mb-10">
+          <div>
+            <h1 class="text-4xl font-bold text-gray-900 mb-2">
+              {{ project.id ? 'Modifier le projet' : 'Nouveau projet' }}
+            </h1>
+            <p class="text-gray-500">Peaufinez chaque détail de votre création musicale</p>
+          </div>
+          <button *ngIf="project.id" (click)="deleteProject()" class="flex items-center gap-2 px-4 py-2 border border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition-colors text-sm">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+            </svg>
+            Supprimer
+          </button>
+        </div>
+
+        <div class="flex gap-6 border-b border-gray-200 -mb-px">
+          <button (click)="setActiveSection('general')" [class.border-b-2]="activeSection === 'general'" [class.border-black]="activeSection === 'general'" [class.text-black]="activeSection === 'general'" [class.text-gray-500]="activeSection !== 'general'" class="pb-4 px-1 text-sm font-medium transition-colors hover:text-gray-900 flex items-center gap-2 -mb-px">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M18 3a1 1 0 00-1.196-.98l-10 2A1 1 0 006 5v9.114A4.369 4.369 0 005 14c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V7.82l8-1.6v5.894A4.369 4.369 0 0015 12c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V3z"/>
+            </svg>
+            Général
+          </button>
+          <button (click)="setActiveSection('audio')" [class.border-b-2]="activeSection === 'audio'" [class.border-black]="activeSection === 'audio'" [class.text-black]="activeSection === 'audio'" [class.text-gray-500]="activeSection !== 'audio'" class="pb-4 px-1 text-sm font-medium transition-colors hover:text-gray-900 flex items-center gap-2 -mb-px">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+            </svg>
+            Audio
+          </button>
+          <button (click)="setActiveSection('visibility')" [class.border-b-2]="activeSection === 'visibility'" [class.border-black]="activeSection === 'visibility'" [class.text-black]="activeSection === 'visibility'" [class.text-gray-500]="activeSection !== 'visibility'" class="pb-4 px-1 text-sm font-medium transition-colors hover:text-gray-900 flex items-center gap-2 -mb-px">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+            </svg>
+            Visibilité
+          </button>
+        </div>
+
+        <div *ngIf="errorMessage" class="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+          {{ errorMessage }}
+        </div>
+      </div>
+    </section>
+
+    <section *ngIf="activeSection === 'general'">
+      <div class="max-w-6xl mx-auto px-6 py-2">
+        <div class="flex gap-8">
+          <div class="flex-1 space-y-7">
+            <div>
+              <label for="title" class="block text-base font-semibold text-gray-900 mb-2">
+                Titre du projet <span class="text-red-500">*</span>
+              </label>
+              <input type="text" id="title" [(ngModel)]="project.title" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-gray-900 focus:ring-1 focus:ring-gray-900 transition-colors outline-none text-gray-900 bg-gray-50" placeholder="Sakura Dreams" required />
+            </div>
+            <div>
+              <label for="description" class="block text-base font-semibold text-gray-900 mb-2">Description</label>
+              <textarea id="description" [(ngModel)]="project.description" rows="3" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-gray-900 focus:ring-1 focus:ring-gray-900 transition-colors outline-none text-gray-900 resize-none bg-gray-50" placeholder="Une ballade douce inspirée par les cerisiers en fleurs."></textarea>
+              <p class="mt-2 text-sm text-gray-500 flex items-start gap-1.5">
+                <svg class="w-4 h-4 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                Une bonne description aide les auditeurs à mieux comprendre votre vision artistique
+              </p>
+            </div>
+
+            <div>
+              <label class="block text-base font-semibold text-gray-900 mb-3">Image de couverture</label>
+              <div class="flex items-start gap-6">
+                <div *ngIf="coverImageUrl" class="w-40 h-40 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0 border border-gray-200">
+                  <img [src]="coverImageUrl" alt="Aperçu" class="w-full h-full object-cover">
+                </div>
+                <div class="flex-1">
+                  <label for="cover" class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-gray-400 transition-colors bg-gray-50">
+                    <svg class="w-8 h-8 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                    </svg>
+                    <span class="text-sm text-gray-600">Cliquez pour choisir une image</span>
+                    <span class="text-xs text-gray-500 mt-1">PNG ou JPG uniquement</span>
+                    <input type="file" id="cover" accept=".png,.jpg,.jpeg,image/png,image/jpeg" (change)="onCoverImageSelected($event)" class="hidden" />
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+              <div>
+                <label for="tempo" class="block text-base font-semibold text-gray-900 mb-3">Tempo (BPM)</label>
+                <input type="number" id="tempo" [(ngModel)]="project.tempo" min="40" max="240" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-gray-900 focus:ring-1 focus:ring-gray-900 transition-colors outline-none text-gray-900 bg-gray-50" placeholder="120" />
+              </div>
+              <div>
+                <label for="tonality" class="block text-base font-semibold text-gray-900 mb-3">Tonalité</label>
+                <select id="tonality" [(ngModel)]="project.key_signature" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-gray-900 focus:ring-1 focus:ring-gray-900 transition-colors outline-none appearance-none bg-gray-50 cursor-pointer text-gray-900">
+                  <option value="">Sélectionnez...</option>
+                  <option *ngFor="let key of tonalities" [value]="key">{{ key }}</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="w-80 flex-shrink-0">
+            <div class="sticky top-6">
+              <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                    </svg>
+                    <h3 class="text-base font-semibold text-gray-900">Tags</h3>
+                  </div>
+                  <span class="text-xs font-medium" [class.text-gray-500]="(project.tags?.length || 0) < 6" [class.text-orange-600]="(project.tags?.length || 0) >= 6">
+                    {{ project.tags?.length || 0 }} / 6
+                  </span>
+                </div>
+                
+                <div class="relative">
+                  <input type="text" [(ngModel)]="tagSearchQuery" (ngModelChange)="filterTags()" (keydown.enter)="handleTagEnter()" placeholder="Rechercher ou créer un tag..." maxlength="30" class="w-full px-3 py-2 pl-9 text-sm border border-gray-300 rounded-lg focus:border-gray-900 focus:ring-1 focus:ring-gray-900 transition-colors outline-none text-gray-900 bg-white" />
+                  <svg class="absolute left-3 top-2.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                  </svg>
+                </div>
+                
+                <div *ngIf="getFilteredTags().length > 0" class="max-h-64 overflow-y-auto">
+                  <div class="flex flex-wrap gap-2">
+                    <button *ngFor="let tag of getFilteredTags()" (click)="toggleTagAndReset(tag)" [disabled]="!isTagSelected(tag.id) && project.tags && project.tags.length >= 6" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200" [class.bg-gray-900]="isTagSelected(tag.id)" [class.text-white]="isTagSelected(tag.id)" [class.shadow-sm]="isTagSelected(tag.id)" [class.bg-white]="!isTagSelected(tag.id)" [class.text-gray-700]="!isTagSelected(tag.id)" [class.border]="!isTagSelected(tag.id)" [class.border-gray-300]="!isTagSelected(tag.id)" [class.hover:border-gray-400]="!isTagSelected(tag.id) && (!project.tags || project.tags.length < 6)" [class.hover:bg-gray-50]="!isTagSelected(tag.id) && (!project.tags || project.tags.length < 6)" [class.opacity-40]="!isTagSelected(tag.id) && project.tags && project.tags.length >= 6" [class.cursor-not-allowed]="!isTagSelected(tag.id) && project.tags && project.tags.length >= 6" [class.cursor-pointer]="isTagSelected(tag.id) || !project.tags || project.tags.length < 6">
+                      <svg *ngIf="!isTagSelected(tag.id)" class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                      </svg>
+                      <svg *ngIf="isTagSelected(tag.id)" class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                      </svg>
+                      {{ tag.name }}
+                    </button>
+                  </div>
+                </div>
+                
+                <p *ngIf="getFilteredTags().length === 0" class="text-center text-sm text-gray-500 py-4">
+                  Aucun tag trouvé
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section *ngIf="activeSection === 'audio'" class="border-t border-gray-200">
+      <div class="max-w-6xl mx-auto px-6 py-8">
+        <div class="flex justify-center">
+          <div class="text-center py-16">
+            <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/>
+              </svg>
+            </div>
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">
+              {{ project.id ? 'Éditer l\'audio de votre projet' : 'Créer l\'audio de votre projet' }}
+            </h3>
+            <p class="text-gray-600 mb-6">
+              {{ project.id ? 'Utilisez le compositeur pour modifier la partie audio de votre projet' : 'Utilisez le compositeur pour créer la partie audio de votre projet' }}
+            </p>
+            <button (click)="openComposer()" class="inline-flex items-center gap-2 px-6 py-3 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-800 transition-colors">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+              </svg>
+              {{ project.id ? 'Modifier dans le compositeur' : 'Créer dans le compositeur' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section *ngIf="activeSection === 'visibility'" class="border-t border-gray-200">
+      <div class="max-w-6xl mx-auto px-6 py-8">
+        <div class="max-w-4xl space-y-4">
+          <label class="flex items-start gap-4 p-5 border rounded-lg cursor-pointer transition-all" [class.border-gray-900]="project.status === '0'" [class.bg-gray-50]="project.status === '0'" [class.border-gray-300]="project.status !== '0'" [class.hover:border-gray-400]="project.status !== '0'" [class.hover:bg-gray-50]="project.status !== '0'">
+            <input type="radio" name="status" id="status-draft" value="0" [(ngModel)]="project.status" class="mt-1 w-5 h-5 cursor-pointer accent-gray-900" />
+            <div class="flex-1">
+              <div class="font-semibold text-gray-900 mb-1">Brouillon</div>
+              <p class="text-sm text-gray-600">Visible uniquement par vous. Parfait pour les projets en cours de développement.</p>
+            </div>
+          </label>
+          <label class="flex items-start gap-4 p-5 border rounded-lg cursor-pointer transition-all" [class.border-gray-900]="project.status === '1'" [class.bg-gray-50]="project.status === '1'" [class.border-gray-300]="project.status !== '1'" [class.hover:border-gray-400]="project.status !== '1'" [class.hover:bg-gray-50]="project.status !== '1'">
+            <input type="radio" name="status" id="status-published" value="1" [(ngModel)]="project.status" class="mt-1 w-5 h-5 cursor-pointer accent-gray-900" />
+            <div class="flex-1">
+              <div class="font-semibold text-gray-900 mb-1">Publiée</div>
+              <p class="text-sm text-gray-600">Accessible à toute la communauté UTAU. Votre création sera visible et partageable.</p>
+            </div>
+          </label>
+          <label class="flex items-start gap-4 p-5 border rounded-lg cursor-pointer transition-all" [class.border-gray-900]="project.status === '2'" [class.bg-gray-50]="project.status === '2'" [class.border-gray-300]="project.status !== '2'" [class.hover:border-gray-400]="project.status !== '2'" [class.hover:bg-gray-50]="project.status !== '2'">
+            <input type="radio" name="status" id="status-archived" value="2" [(ngModel)]="project.status" class="mt-1 w-5 h-5 cursor-pointer accent-gray-900" />
+            <div class="flex-1">
+              <div class="font-semibold text-gray-900 mb-1">Archivée</div>
+              <p class="text-sm text-gray-600">Le projet est archivé et n'apparaît plus dans les recherches publiques.</p>
+            </div>
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-t border-gray-100 bg-white sticky bottom-0">
+      <div class="max-w-6xl mx-auto px-6 py-4">
+        <div class="flex items-center justify-between">
+          <button (click)="cancel()" [disabled]="isSaving" class="px-4 py-3 text-sm text-gray-600 rounded-lg font-medium hover:text-gray-900 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+            Annuler les modifications
+          </button>
+          <button (click)="saveProject()" [disabled]="isSaving || !project.title.trim()" class="flex items-center justify-center gap-2 px-4 py-3 text-sm bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-800 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed">
+            <svg *ngIf="isSaving" class="animate-spin w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <svg *ngIf="!isSaving" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
+            </svg>
+            <span>{{ isSaving ? 'Enregistrement...' : 'Enregistrer les modifications' }}</span>
+          </button>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
