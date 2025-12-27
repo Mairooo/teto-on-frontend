@@ -12,7 +12,9 @@ export default function registerEndpoint(router, { services, database, getSchema
 	// Route pour récupérer un fichier audio spécifique
 	router.get('/:voicebankName/:fileName', async (req, res) => {
 		try {
-			const { voicebankName, fileName } = req.params;
+			const { voicebankName } = req.params;
+			// Décoder le nom de fichier URL-encodé
+			const fileName = decodeURIComponent(req.params.fileName);
 			
 			const schema = await getSchema({ database });
 			const voicebankService = new ItemsService('voicebanks', {
@@ -59,15 +61,26 @@ export default function registerEndpoint(router, { services, database, getSchema
 
 			let audioFile = null;
 
-			// Chercher le fichier demandé (insensible à la casse)
+			// Chercher le fichier demandé (recherche exacte puis insensible à la casse)
 			for (const entry of zipEntries) {
 				if (!entry.isDirectory) {
-					const entryFileName = join('/', entry.entryName).split('/').pop().toLowerCase();
-					const requestedFileName = fileName.toLowerCase();
+					const entryFileName = join('/', entry.entryName).split('/').pop();
 					
-					if (entryFileName === requestedFileName) {
+					// Essayer d'abord une correspondance exacte
+					if (entryFileName === fileName) {
 						audioFile = {
-							name: join('/', entry.entryName).split('/').pop(),
+							name: entryFileName,
+							path: entry.entryName,
+							size: entry.header.size,
+							buffer: entry.getData(),
+						};
+						break;
+					}
+					
+					// Sinon essayer insensible à la casse pour les fichiers ASCII
+					if (entryFileName.toLowerCase() === fileName.toLowerCase()) {
+						audioFile = {
+							name: entryFileName,
 							path: entry.entryName,
 							size: entry.header.size,
 							buffer: entry.getData(),

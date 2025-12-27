@@ -56,7 +56,41 @@ export class VoicebankService {
     return `${this.apiUrl}/voicebank-api/${encodeURIComponent(voicebankName)}/${encodeURIComponent(filename)}`;
   }
 
-  async playAudio(voicebankName: string, filename: string): Promise<void> {
+  /**
+   * Convertit un nom de note en numéro MIDI
+   * Note: C4 (Middle C) = MIDI 60 (norme internationale)
+   */
+  private noteToMidi(noteName: string): number {
+    const noteMap: { [key: string]: number } = {
+      'C': 0, 'C#': 1, 'D': 2, 'D#': 3, 'E': 4, 'F': 5,
+      'F#': 6, 'G': 7, 'G#': 8, 'A': 9, 'A#': 10, 'B': 11
+    };
+    
+    const match = noteName.match(/^([A-G]#?)(\d)$/);
+    if (!match) return 60; // C4 par défaut
+    
+    const [, note, octave] = match;
+    const noteNum = noteMap[note] ?? 0;
+    const octaveNum = parseInt(octave, 10);
+    
+    // Formule MIDI standard : (octave + 1) * 12 + note
+    // C-1 = 0, C0 = 12, C1 = 24, ..., C4 = 60
+    return (octaveNum + 1) * 12 + noteNum;
+  }
+
+  /**
+   * Calcule le ratio de playback pour changer la hauteur d'une note
+   */
+  private calculatePlaybackRate(fromNote: string, toNote: string): number {
+    const fromMidi = this.noteToMidi(fromNote);
+    const toMidi = this.noteToMidi(toNote);
+    const semitoneDiff = toMidi - fromMidi;
+    
+    // Formule pour le pitch shifting : 2^(n/12) où n = nombre de demi-tons
+    return Math.pow(2, semitoneDiff / 12);
+  }
+
+  async playAudio(voicebankName: string, filename: string, pitch?: string): Promise<void> {
     const cacheKey = `${voicebankName}:${filename}`;
     
     let audio = this.audioCache.get(cacheKey);
@@ -78,7 +112,19 @@ export class VoicebankService {
 
     try {
       audio.currentTime = 0;
-      console.log('Playing audio:', filename);
+      
+      // Appliquer le pitch shifting si un pitch est fourni
+      if (pitch) {
+        const referencePitch = 'C4'; // La note de référence des samples
+        const playbackRate = this.calculatePlaybackRate(referencePitch, pitch);
+        audio.playbackRate = playbackRate;
+        audio.preservesPitch = false; // Important pour que le pitch change vraiment
+        console.log('Playing audio:', filename, 'at pitch:', pitch, 'rate:', playbackRate);
+      } else {
+        audio.playbackRate = 1.0;
+        console.log('Playing audio:', filename, 'at normal rate');
+      }
+      
       await audio.play();
     } catch (error) {
       console.error('Error playing audio:', filename, error);

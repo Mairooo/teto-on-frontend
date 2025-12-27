@@ -36,6 +36,40 @@ export class AudioRendererService {
   }
 
   /**
+   * Convertit un nom de note (ex: "C4", "D#5") en numéro MIDI
+   * Note: C4 (Middle C) = MIDI 60 (norme internationale)
+   */
+  private noteToMidi(noteName: string): number {
+    const noteMap: { [key: string]: number } = {
+      'C': 0, 'C#': 1, 'D': 2, 'D#': 3, 'E': 4, 'F': 5,
+      'F#': 6, 'G': 7, 'G#': 8, 'A': 9, 'A#': 10, 'B': 11
+    };
+    
+    const match = noteName.match(/^([A-G]#?)(\d)$/);
+    if (!match) return 60; // C4 par défaut
+    
+    const [, note, octave] = match;
+    const noteNum = noteMap[note] ?? 0;
+    const octaveNum = parseInt(octave, 10);
+    
+    // Formule MIDI standard : (octave + 1) * 12 + note
+    // C-1 = 0, C0 = 12, C1 = 24, ..., C4 = 60
+    return (octaveNum + 1) * 12 + noteNum;
+  }
+
+  /**
+   * Calcule le ratio de playback pour changer la hauteur d'une note
+   */
+  private calculatePlaybackRate(fromNote: string, toNote: string): number {
+    const fromMidi = this.noteToMidi(fromNote);
+    const toMidi = this.noteToMidi(toNote);
+    const semitoneDiff = toMidi - fromMidi;
+    
+    // Formule pour le pitch shifting : 2^(n/12) où n = nombre de demi-tons
+    return Math.pow(2, semitoneDiff / 12);
+  }
+
+  /**
    * Calcule la durée totale de la composition en secondes
    */
   private calculateTotalDuration(notes: Note[], bpm: number): number {
@@ -91,6 +125,12 @@ export class AudioRendererService {
 
       // Calculer le temps de départ en secondes
       const startTime = note.startTime / beatsPerSecond;
+
+      // Appliquer le pitch shifting (hauteur de la note)
+      // On suppose que les samples sont enregistrés en C4 (Do central)
+      const referencePitch = 'C4';
+      const playbackRate = this.calculatePlaybackRate(referencePitch, note.pitch);
+      source.playbackRate.value = playbackRate;
 
       // Connecter à la destination et démarrer
       source.connect(offlineContext.destination);

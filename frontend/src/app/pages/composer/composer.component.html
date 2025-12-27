@@ -60,7 +60,12 @@
 
             <div class="mt-4">
               <label class="block text-sm text-gray-700 mb-1">Banque vocale</label>
-              <select class="w-full h-10 px-3 rounded-md border border-gray-300 bg-white"
+              <!-- Si le projet est sauvegardé, afficher la voicebank en lecture seule -->
+              <div *ngIf="isProjectSaved()" class="w-full h-10 px-3 rounded-md border border-gray-300 bg-gray-100 flex items-center text-gray-700">
+                <span>{{ projectVoicebank()?.name || 'N/A' }}</span>
+              </div>
+              <!-- Sinon, afficher le sélecteur -->
+              <select *ngIf="!isProjectSaved()" class="w-full h-10 px-3 rounded-md border border-gray-300 bg-white"
                       (change)="onSelectVoicebank(voicebanks()[$any($event.target).selectedIndex])">
                 <option *ngFor="let vb of voicebanks()" [value]="vb.id">{{ vb.name }}</option>
               </select>
@@ -80,6 +85,13 @@
                 <span>BPM: {{ bpm() }}</span>
               </div>
               <input type="range" min="40" max="240" [value]="bpm()" (input)="onChangeBpm($event)" class="w-full" />
+            </div>
+
+            <div class="mt-4">
+              <div class="flex items-center justify-between text-sm">
+                <span>Mesures: {{ measures() }}</span>
+              </div>
+              <input type="range" min="4" max="64" step="4" [value]="measures()" (input)="onChangeMeasures($event)" class="w-full" />
             </div>
           </div>
 
@@ -105,9 +117,9 @@
               <div>Notes: {{ notesCount() }}</div>
               <div>{{ measures() }} mesures</div>
             </div>
-            <div class="p-0">
-              <div class="grid grid-cols-[80px_repeat(8,1fr)]" style="height: 560px;">
-                <div class="border-r border-gray-200 bg-gray-50 text-xs text-gray-600 p-2">Mesure</div>
+            <div class="p-0 overflow-x-auto">
+              <div class="grid" [style.grid-template-columns]="'80px repeat(' + measures() + ', minmax(80px, 1fr))'" style="height: 560px; min-width: min-content;">
+                <div class="border-r border-gray-200 bg-gray-50 text-xs text-gray-600 p-2 sticky left-0 z-10 bg-gray-50">Mesure</div>
                 <ng-container *ngFor="let m of [].constructor(measures()); let i = index">
                   <div class="border-l border-gray-200 text-center text-xs text-gray-600 p-2">{{ i + 1 }}</div>
                 </ng-container>
@@ -115,7 +127,7 @@
                 <div class="col-span-full border-t border-gray-200"></div>
 
                 <ng-container *ngFor="let row of pitchList; let rowIndex = index">
-                  <div class="border-b border-gray-100 text-xs text-gray-700 bg-gray-50/60 p-2">{{ row }}</div>
+                  <div class="border-b border-gray-100 text-xs text-gray-700 bg-gray-50/60 p-2 sticky left-0 z-10 border-r border-gray-200">{{ row }}</div>
                   <ng-container *ngFor="let m of [].constructor(measures()); let measureIndex = index">
                     <div 
                       class="border-l border-gray-100 border-b border-gray-100 bg-white relative cursor-pointer hover:bg-blue-50 transition-colors"

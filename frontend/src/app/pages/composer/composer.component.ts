@@ -27,6 +27,8 @@ export class ComposerComponent implements OnInit {
   
   readonly voicebanks = signal<Voicebank[]>([]);
   readonly selectedVoicebank = signal<Voicebank | null>(null);
+  readonly projectVoicebank = signal<Voicebank | null>(null); // Voicebank fixée au projet
+  readonly isProjectSaved = signal(false); // Indique si le projet est sauvegardé
   readonly selectedPhoneme = signal<string>('a');
   readonly pitchList = PITCH_LIST;
   readonly phonemeList = Object.keys(PHONEME_MAP);
@@ -121,8 +123,8 @@ export class ComposerComponent implements OnInit {
       if (this.selectedVoicebank()) {
         const filename = PHONEME_MAP[this.selectedPhoneme()];
         if (filename) {
-          console.log('Playing preview:', filename);
-          this.voicebankService.playAudio(this.selectedVoicebank()!.name, filename);
+          console.log('Playing preview:', filename, 'at pitch:', pitch);
+          this.voicebankService.playAudio(this.selectedVoicebank()!.name, filename, pitch);
         }
       }
     }
@@ -177,8 +179,8 @@ export class ComposerComponent implements OnInit {
       if (this.selectedVoicebank()) {
         const filename = PHONEME_MAP[note.phoneme];
         if (filename) {
-          console.log('Playing:', filename, 'for voicebank:', this.selectedVoicebank()!.name);
-          this.voicebankService.playAudio(this.selectedVoicebank()!.name, filename);
+          console.log('Playing:', filename, 'at pitch:', note.pitch, 'for voicebank:', this.selectedVoicebank()!.name);
+          this.voicebankService.playAudio(this.selectedVoicebank()!.name, filename, note.pitch);
           this.playingNotes.add(note.id);
           
           setTimeout(() => {
@@ -197,6 +199,14 @@ export class ComposerComponent implements OnInit {
     const input = event.target as HTMLInputElement | null;
     const val = Number(input?.value ?? '');
     if (!Number.isNaN(val)) this.bpm.set(val);
+  }
+
+  onChangeMeasures(event: Event): void {
+    const input = event.target as HTMLInputElement | null;
+    const val = Number(input?.value ?? '');
+    if (!Number.isNaN(val) && val >= 4 && val <= 64) {
+      this.measures.set(val);
+    }
   }
 
   private startTicker(): void {
@@ -334,6 +344,8 @@ export class ComposerComponent implements OnInit {
         this.currentProjectId.set(project.id);
         this.projectTitle.set(project.title);
         this.projectDescription.set(project.description || '');
+        this.isProjectSaved.set(true); // Marquer le projet comme sauvegardé
+        this.projectVoicebank.set(this.selectedVoicebank()); // Fixer la voicebank au projet
         this.closeSaveDialog();
         
         // Rediriger vers le profil après la sauvegarde
@@ -390,6 +402,7 @@ export class ComposerComponent implements OnInit {
     this.projectTitle.set(project.title);
     this.projectDescription.set(project.description || '');
     this.bpm.set(project.tempo);
+    this.isProjectSaved.set(true); // Le projet est sauvegardé
     
     // Charger les notes
     console.log('Composition data:', project.composition_data);
@@ -398,7 +411,7 @@ export class ComposerComponent implements OnInit {
     console.log('Number of notes:', notes.length);
     this.notes.set(notes);
 
-    // Trouver et sélectionner la voicebank
+    // Trouver et fixer la voicebank
     if (project.primary_voicebank) {
       const voicebankId = typeof project.primary_voicebank === 'string' 
         ? project.primary_voicebank 
@@ -407,6 +420,7 @@ export class ComposerComponent implements OnInit {
       const voicebank = this.voicebanks().find(v => v.id === voicebankId);
       if (voicebank) {
         this.onSelectVoicebank(voicebank);
+        this.projectVoicebank.set(voicebank); // Fixer la voicebank au projet
       }
     }
 
@@ -457,6 +471,8 @@ export class ComposerComponent implements OnInit {
     this.notes.set([]);
     this.timePosition.set(0);
     this.bpm.set(120);
+    this.isProjectSaved.set(false); // Nouveau projet non sauvegardé
+    this.projectVoicebank.set(null); // Pas de voicebank fixée
   }
 
   exportProject(): void {
