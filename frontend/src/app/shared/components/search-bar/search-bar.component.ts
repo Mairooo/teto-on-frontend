@@ -100,8 +100,11 @@ export class SearchBarComponent implements OnInit, OnDestroy {
     const query = this.searchControl.value?.trim();
     if (query) {
       this.router.navigate(['/search'], { queryParams: { q: query } });
-      this.showSuggestions = false;
+    } else {
+      // Si la barre est vide, afficher tous les projets
+      this.router.navigate(['/search'], { queryParams: {} });
     }
+    this.showSuggestions = false;
   }
 
   /**
@@ -134,11 +137,13 @@ export class SearchBarComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Effacer la recherche
+   * Effacer la recherche et afficher tous les projets
    */
   clearSearch(): void {
     this.searchControl.setValue('');
     this.suggestions = [];
     this.showSuggestions = false;
+    // Naviguer vers la page de recherche sans query pour afficher tous les projets
+    this.router.navigate(['/search'], { queryParams: {} });
   }
 }

@@ -1,12 +1,15 @@
-import { Component, OnInit, ChangeDetectorRef, HostListener, ElementRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, HostListener, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { ProjectsService } from '../../shared/services/project.service';
 import { Projects } from '../../shared/interfaces/project.interface';
 import { environment } from '../../../environments/environment';
 import { LikeButtonComponent } from '../../shared/components/like-button/like-button.component';
 import { CommentSectionComponent } from '../../shared/components/comment-section/comment-section.component';
 import { Api } from '../../shared/services/api.service';
+import { WebSocketService } from '../../shared/services/websocket.service';
+import { LikesService } from '../../shared/services/likes.service';
 
 @Component({
   selector: 'app-project-detail',
@@ -15,13 +18,14 @@ import { Api } from '../../shared/services/api.service';
   templateUrl: './project-detail.component.html',
   styleUrl: './project-detail.component.css'
 })
-export class ProjectDetailComponent implements OnInit {
+export class ProjectDetailComponent implements OnInit, OnDestroy {
   project: Projects | null = null;
   isLoading = true;
   error = '';
   showShareMenu = false;
   private readonly DIRECTUS_URL = environment.directusUrl;
   private hasPlayedInSession = false;
+  private wsSubscription?: Subscription;
 
   // Lecteur audio
   isPlaying = false;
@@ -43,7 +47,9 @@ export class ProjectDetailComponent implements OnInit {
     private projectService: ProjectsService,
     private api: Api,
     private cd: ChangeDetectorRef,
-    private elementRef: ElementRef
+    private elementRef: ElementRef,
+    private wsService: WebSocketService,
+    private likesService: LikesService
   ) {}
 
   @HostListener('document:click', ['$event'])
@@ -61,6 +67,27 @@ export class ProjectDetailComponent implements OnInit {
         this.loadProject(projectTitle);
       }
     });
+
+    // Écouter les changements de likes en temps réel
+    this.wsService.connect();
+    this.wsService.subscribe('Likes');
+    
+    this.wsSubscription = this.wsService.onCollection('Likes').subscribe((msg) => {
+      if (this.project?.id && msg.data) {
+        // Vérifier si le like concerne ce projet
+        const relevantLike = msg.data.find((like: any) => like.project_id === this.project?.id);
+        if (relevantLike) {
+          console.log('❤️ Like mis à jour pour ce projet:', msg.event);
+          // Recharger le statut du like
+          this.likesService.getLikeStatus(this.project.id).subscribe(status => {
+            if (this.project) {
+              this.project.likes_count = status.total_likes;
+              this.cd.detectChanges();
+            }
+          });
+        }
+      }
+    });
   }
 
   ngOnDestroy(): void {
@@ -69,6 +96,9 @@ export class ProjectDetailComponent implements OnInit {
       this.audio.pause();
       this.audio = null;
     }
+    // Nettoyer le WebSocket
+    this.wsSubscription?.unsubscribe();
+    this.wsService.unsubscribe('Likes');
   }
 
   private loadProject(title: string): void {
@@ -216,6 +246,16 @@ export class ProjectDetailComponent implements OnInit {
         // En cas d'erreur de vérification, on ne fait rien (pas d'incrémentation)
       }
     });
+  }
+
+  /**
+   * Met à jour le compteur de likes quand l'utilisateur like/unlike
+   */
+  onLikesChanged(newCount: number): void {
+    if (this.project) {
+      this.project.likes_count = newCount;
+      this.cd.detectChanges();
+    }
   }
 
   downloadUSTFile(): void {

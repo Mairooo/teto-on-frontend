@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, OnDestroy, OnChanges, SimpleChanges, ChangeDetectorRef } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, OnChanges, SimpleChanges, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { LikesService, LikeStatusResponse } from '../../services/likes.service';
 import { AuthService } from '../../services/auth.service';
@@ -63,6 +63,7 @@ import { Subject, takeUntil } from 'rxjs';
 export class LikeButtonComponent implements OnInit, OnChanges, OnDestroy {
   @Input() projectId!: string;
   @Input() initialLikesCount: number = 0;
+  @Output() likesChanged = new EventEmitter<number>();
   
   isLiked = false;
   likesCount = 0;
@@ -172,6 +173,9 @@ export class LikeButtonComponent implements OnInit, OnChanges, OnDestroy {
         this.isLiked = response.data.user_has_liked;
         this.likesCount = response.data.likes_count;
         this.isLoading = false;
+        
+        // Émettre le nouveau nombre de likes au parent
+        this.likesChanged.emit(this.likesCount);
         
         // Forcer la détection de changements
         this.cdr.markForCheck();

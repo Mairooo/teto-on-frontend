@@ -117,7 +117,8 @@
             <div class="flex items-center gap-3">
               <app-like-button 
                 [projectId]="project.id" 
-                [initialLikesCount]="project.likes_count || 0">
+                [initialLikesCount]="project.likes_count || 0"
+                (likesChanged)="onLikesChanged($event)">
               </app-like-button>
               <div class="relative" id="share-menu-container">
                 <button 

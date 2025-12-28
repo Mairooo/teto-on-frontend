@@ -1,3 +1,35 @@
+<!-- Header fixe avec navigation -->
+<header class="fixed top-0 left-0 right-0 z-50 w-full border-b border-gray-200 bg-white/95 backdrop-blur-sm shadow-sm">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex h-16 items-center justify-between">
+      <!-- Logo -->
+      <div class="flex items-center">
+        <a routerLink="/" class="cursor-pointer">
+          <img src="/logo.png" alt="UTAU Community" class="h-14 object-contain" />
+        </a>
+      </div>
+      
+      <!-- Navigation -->
+      <nav class="hidden md:flex items-center gap-8 text-sm text-gray-700">
+        <a routerLink="/" class="hover:text-gray-900 transition-colors cursor-pointer">Accueil</a>
+        <a routerLink="/composer" class="hover:text-gray-900 transition-colors cursor-pointer">Composer</a>
+        <a routerLink="/search" class="hover:text-gray-900 transition-colors cursor-pointer">Rechercher</a>
+        <a routerLink="/profile" class="hover:text-gray-900 transition-colors cursor-pointer">Profil</a>
+      </nav>
+      
+      <!-- Actions -->
+      <div class="flex items-center gap-2">
+        <button (click)="goBack()" class="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+          </svg>
+          Retour
+        </button>
+      </div>
+    </div>
+  </div>
+</header>
+
 <main class="pt-16">
   <section class="bg-white">
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -12,7 +44,7 @@
         <div class="p-6 space-y-6">
           <div class="flex items-center gap-4">
             <div class="w-20 h-20 rounded-full bg-gray-100 overflow-hidden">
-              <img *ngIf="avatarUrl" [src]="avatarUrl" alt="Avatar" class="w-full h-full object-cover" />
+              <img *ngIf="avatarPreviewUrl || avatarUrl" [src]="avatarPreviewUrl || avatarUrl" alt="Avatar" class="w-full h-full object-cover" />
             </div>
             <div>
               <label class="block">

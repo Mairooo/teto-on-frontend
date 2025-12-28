@@ -2,7 +2,8 @@ import { Component, OnInit, OnDestroy, signal, HostListener, ElementRef } from '
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { NotificationService, Notification } from '../../services/notification.service';
-import { interval, Subscription } from 'rxjs';
+import { WebSocketService } from '../../services/websocket.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-notification-bell',
@@ -108,24 +109,45 @@ import { interval, Subscription } from 'rxjs';
 })
 export class NotificationBellComponent implements OnInit, OnDestroy {
   readonly isOpen = signal(false);
-  private pollingSubscription?: Subscription;
-  private readonly POLL_INTERVAL = 10000; // 10 secondes
+  private wsSubscription?: Subscription;
 
   constructor(
     public notificationService: NotificationService,
+    private wsService: WebSocketService,
     private elementRef: ElementRef
   ) {}
 
   ngOnInit(): void {
+    // Charger les notifications initiales
     this.loadNotifications();
-    // Polling pour rafraîchir les notifications
-    this.pollingSubscription = interval(this.POLL_INTERVAL).subscribe(() => {
+    
+    // Connecter au WebSocket et s'abonner aux notifications
+    this.wsService.connect();
+    this.wsService.subscribe('Notifications');
+    
+    // Écouter les nouvelles notifications en temps réel
+    this.wsSubscription = this.wsService.onCreate('Notifications').subscribe((data) => {
+      console.log('📬 Nouvelle notification!', data);
+      // Optimistic update : incrémenter le compteur immédiatement
+      this.notificationService.unreadCount.update(count => count + 1);
+      // Puis recharger pour avoir les données complètes
+      this.loadNotifications();
+    });
+
+    // Écouter les mises à jour (ex: marqué comme lu)
+    this.wsService.onUpdate('Notifications').subscribe(() => {
+      this.loadNotifications();
+    });
+
+    // Écouter les suppressions
+    this.wsService.onDelete('Notifications').subscribe(() => {
       this.loadNotifications();
     });
   }
 
   ngOnDestroy(): void {
-    this.pollingSubscription?.unsubscribe();
+    this.wsSubscription?.unsubscribe();
+    this.wsService.unsubscribe('Notifications');
   }
 
   loadNotifications(): void {
@@ -155,10 +177,6 @@ export class NotificationBellComponent implements OnInit, OnDestroy {
     if (notif.status === 'non_lu') {
       this.notificationService.markAsRead(notif.id).subscribe();
     }
-    // Optionnel: naviguer vers le projet
-    // if (notif.project_id) {
-    //   this.router.navigate(['/project', notif.project_id]);
-    // }
   }
 
   deleteNotif(event: Event, notif: Notification): void {

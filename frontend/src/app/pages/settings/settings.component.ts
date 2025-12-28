@@ -1,10 +1,10 @@
 import { Component, OnInit, afterNextRender, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router, RouterModule } from '@angular/router';
 import { environment } from '../../../environments/environment';
 import { Api } from '../../shared/services/api.service';
 import { AuthService } from '../../shared/services/auth.service';
-import { Router } from '@angular/router';
 
 type MeResponse = {
   data: {
@@ -19,7 +19,7 @@ type MeResponse = {
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule],
   templateUrl: './settings.component.html',
   styleUrls: ['./settings.component.css']
 })
@@ -37,6 +37,7 @@ export class SettingsComponent implements OnInit {
 
   private userId: string | null = null;
   avatarUrl?: string;
+  avatarPreviewUrl?: string; // Prévisualisation locale avant upload
   private avatarFileId: string | null = null;
 
   form = this.fb.nonNullable.group({
@@ -88,16 +89,26 @@ export class SettingsComponent implements OnInit {
     const file = input?.files?.[0];
     if (!file) return;
     this.error.set(null);
+    
+    // Afficher immédiatement la prévisualisation locale
+    this.avatarPreviewUrl = URL.createObjectURL(file);
+    
     try {
-  // Utiliser Api pour l'upload
-  const uploaded = await this.api.uploadFile(file).toPromise();
+      // Utiliser Api pour l'upload
+      const uploaded = await this.api.uploadFile(file).toPromise();
       const fid = uploaded?.data?.id;
       if (fid) {
         this.avatarFileId = fid;
         this.avatarUrl = `${this.DIRECTUS_URL}/assets/${fid}?width=160&height=160&fit=cover&quality=80`;
+        // Libérer l'URL de prévisualisation après upload réussi
+        if (this.avatarPreviewUrl) {
+          URL.revokeObjectURL(this.avatarPreviewUrl);
+          this.avatarPreviewUrl = undefined;
+        }
       }
     } catch (e) {
       this.error.set("Échec de l'envoi de l'avatar.");
+      // Garder la prévisualisation même en cas d'erreur pour que l'utilisateur voie ce qu'il a choisi
     }
   }
 
@@ -122,6 +133,10 @@ export class SettingsComponent implements OnInit {
     } finally {
       this.saving.set(false);
     }
+  }
+
+  goBack(): void {
+    history.back();
   }
 }
 

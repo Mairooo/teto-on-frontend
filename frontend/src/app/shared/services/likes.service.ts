@@ -1,8 +1,9 @@
-import { Injectable } from '@angular/core';
+import { Injectable, OnDestroy } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, BehaviorSubject } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { Observable, BehaviorSubject, Subject } from 'rxjs';
+import { tap, takeUntil } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
+import { WebSocketService } from './websocket.service';
 
 export interface LikeToggleResponse {
   success: boolean;
@@ -31,13 +32,60 @@ export interface UserLikesResponse {
 @Injectable({
   providedIn: 'root'
 })
-export class LikesService {
+export class LikesService implements OnDestroy {
   private apiUrl = `${environment.directusUrl}/like-manager`;
   
   // Cache pour stocker l'état des likes en mémoire
   private likesCache = new Map<string, BehaviorSubject<LikeStatusResponse>>();
+  
+  // Subject global pour notifier les changements de likes (temps réel)
+  private likesChanged$ = new Subject<string>();
+  private destroy$ = new Subject<void>();
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private wsService: WebSocketService
+  ) {
+    this.initWebSocketSubscription();
+  }
+
+  /**
+   * Initialise l'écoute WebSocket pour les changements de likes
+   */
+  private initWebSocketSubscription(): void {
+    this.wsService.connect();
+    this.wsService.subscribe('Likes');
+    
+    this.wsService.onCollection('Likes').pipe(
+      takeUntil(this.destroy$)
+    ).subscribe((msg) => {
+      console.log('❤️ Like temps réel:', msg.event);
+      // Notifier les composants intéressés qu'un like a changé
+      if (msg.data && msg.data.length > 0) {
+        msg.data.forEach((likeData: any) => {
+          const projectId = likeData.project_id;
+          if (projectId) {
+            // Recharger le statut du projet concerné
+            this.refreshLikeStatus(projectId);
+          }
+        });
+      }
+    });
+  }
+
+  /**
+   * Rafraîchir le statut d'un like depuis le serveur
+   */
+  private refreshLikeStatus(projectId: string): void {
+    this.getLikeStatus(projectId).subscribe();
+  }
+
+  /**
+   * Observable pour écouter les changements globaux de likes
+   */
+  get onLikesChanged(): Observable<string> {
+    return this.likesChanged$.asObservable();
+  }
 
   /**
    * Toggle le like sur un projet (like ou unlike automatique)
@@ -53,6 +101,7 @@ export class LikesService {
           user_has_liked: response.data.user_has_liked,
           total_likes: response.data.likes_count
         });
+        this.likesChanged$.next(projectId);
       })
     );
   }
@@ -109,5 +158,11 @@ export class LikesService {
    */
   clearCache(): void {
     this.likesCache.clear();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+    this.wsService.unsubscribe('Likes');
   }
 }

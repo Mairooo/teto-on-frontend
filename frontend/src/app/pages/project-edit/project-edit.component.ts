@@ -17,6 +17,7 @@ interface Project {
   key_signature?: string;
   status?: '0' | '1' | '2'; // 0 = draft, 1 = published, 2 = archived
   tags?: Array<{ Tags_id: { id: string; name: string } }>;
+  rendered_audio?: string | { id: string } | null;
 }
 
 @Component({
@@ -231,8 +232,8 @@ export class ProjectEditComponent implements OnInit {
 
     // Vérifier que l'audio est présent si le statut est "publié"
     if (this.project.status === '1') {
-      const projectData = this.project as any;
-      if (!projectData.rendered_audio) {
+      if (!this.project.rendered_audio) {
+        this.errorMessage = 'Vous devez créer l\'audio dans le compositeur avant de publier votre projet';
         this.activeSection = 'audio'; // Rediriger vers la section audio
         this.cdr.detectChanges();
         return;

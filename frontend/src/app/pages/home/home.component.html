@@ -93,7 +93,7 @@
 
       <!-- Grid de projets -->
       <div class="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div *ngFor="let projet of projets"
+        <div *ngFor="let projet of projets; trackBy: trackByProjectId"
              (click)="goToProject(projet.title)"
              class="rounded-xl overflow-hidden border border-gray-200 bg-white hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer">
              
